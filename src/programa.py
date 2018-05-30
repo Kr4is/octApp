@@ -4,6 +4,7 @@ import numpy as np
 from os import listdir
 
 picturesPath = "../res/pictures"
+saveImagePath = "../res/results"
 
 def preprocessImage(readImage):
 	#aux = cv2.cvtColor(readImage, cv2.COLOR_BGR2GRAY)
@@ -12,36 +13,92 @@ def preprocessImage(readImage):
 
 	#clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(2,2))
 	#cli1 = clahe.apply(readImage)
+	
+	#Blur
+	blurreedImage = cv2.medianBlur(readImage, 7)
 
-	_,th = cv2.threshold(readImage,70,255,cv2.THRESH_BINARY)
+	#Umbralizacion
+	#_,preprocessedImage = cv2.threshold(readImage,70,255,cv2.THRESH_BINARY)
+	_,preprocessedImage = cv2.threshold(blurreedImage,70,255,cv2.THRESH_BINARY)
 
+	#Umbralizacion adaptativa
+	#preprocessedImage = cv2.adaptiveThreshold(readImage, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 25, 4)
+	#preprocessedImage = cv2.adaptiveThreshold(blurredImage, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 25, 4)
+
+	#Kernels
 	kernel2 = np.ones((2,2),np.uint8)
+
 	kernel3 = np.array([[0,1,0],
 						[1,1,1],
 						[0,1,0]], np.uint8)
+
 	kernel4 = np.array([[0,1,1,0],
 						[1,1,1,1],
 						[1,1,1,1],
 						[0,1,1,0]], np.uint8)
+
+	kernel4b = np.array([[0,0,0,0],
+						[0,0,0,0],
+						[1,1,1,1],
+						[1,1,1,1]], np.uint8)
+
 	kernel5 = np.array([[0,0,1,0,0],
 						[0,1,1,1,0],
 						[1,1,1,1,1],
 						[0,1,1,1,0],
 						[0,0,1,0,0]], np.uint8)
+
+	kernel5b = np.array([[0,0,0,0,0],
+						[0,0,0,0,0],
+						[1,1,1,1,1],
+						[1,1,1,1,1],
+						[1,1,1,1,1]], np.uint8)
+
+	kernel6 = np.array([[0,0,1,1,0,0],
+						[0,1,1,1,1,0],
+						[1,1,1,1,1,1],
+						[1,1,1,1,1,1],
+						[0,0,1,1,1,0],
+						[0,0,1,1,0,0]], np.uint8)
+
+	kernel7 = np.array([[0,0,0,1,0,0,0],
+						[0,0,1,1,1,0,0],
+						[0,1,1,1,1,1,0],
+						[1,1,1,1,1,1,1],
+						[0,1,1,1,1,1,0],
+						[0,0,1,1,1,0,0],
+						[0,0,0,1,0,0,0]], np.uint8)
 	
-	#closedPreprocessedImage = cv2.morphologyEx(th, cv2.MORPH_CLOSE, kernel)
-	#openedPreprocessedImage = cv2.morphologyEx(closedPreprocessedImage, cv2.MORPH_OPEN, kernel)
-	openedPreprocessedImage = cv2.morphologyEx(th, cv2.MORPH_OPEN, kernel4)
+	kernel8 = np.array([[0,0],
+						[0,0],
+						[0,0],
+						[0,0],
+						[1,1],], np.uint8)
+	
+	
+	#PreprocessedImage = cv2.morphologyEx(preprocessedImage, cv2.MORPH_CLOSE, kernel8)
+	#openedPreprocessedImage = cv2.morphologyEx(closedPreprocessedImage, cv2.MORPH_OPEN, kernel2)
+	#PreprocessedImage = cv2.morphologyEx(preprocessedImage, cv2.MORPH_OPEN, kernel8)
 
-	return openedPreprocessedImage
+	return preprocessedImage
 
-for imageName in listdir(picturesPath):
-	imageRoute = picturesPath+"/"+imageName
-	readImage = cv2.imread(imageRoute,0)
-	#cv2.imshow(imageName,readImage)
-	preprocessedImage = preprocessImage(readImage)
-	#cv2.imshow(imageName+" preprocessed",preprocessedImage)
-	res = np.hstack((readImage,preprocessedImage))
-	cv2.imshow("comparative", res)
+def seeComparative(image, imageName):
+	cv2.imshow(imageName+" comparative", image)
 	cv2.waitKey(0)
 	cv2.destroyAllWindows()
+
+def saveComparative(image, imageName):
+	cv2.imwrite(saveImagePath+"/"+"comparative "+imageName,image)
+
+def main():
+	for imageName in listdir(picturesPath):
+		imageRoute = picturesPath+"/"+imageName
+		readImage = cv2.imread(imageRoute,0)
+		#cv2.imshow(imageName,readImage)
+		preprocessedImage = preprocessImage(readImage)
+		#cv2.imshow(imageName+" preprocessed",preprocessedImage)
+		res = np.hstack((readImage,preprocessedImage))
+		seeComparative(res, imageName)
+		saveComparative(res, imageName)
+
+main()
