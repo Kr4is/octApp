@@ -9,21 +9,37 @@ saveImagePath = "../res/results"
 def preprocessImage(readImage):
 	#aux = cv2.cvtColor(readImage, cv2.COLOR_BGR2GRAY)
 
-	#equ = cv2.equalizeHist(readImage)
+	#Equalizacion de histograma
 
-	#clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(2,2))
-	#cli1 = clahe.apply(readImage)
+	#Normal
+	#equalizedImage = cv2.equalizeHist(readImage)
+
+	#Equalizacion adaptativa de contraste limitado CLAHE 
+	#claheOfImage = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(2,2))
+	#claheImage = clahe.apply(readImage)
 	
-	#Blur
-	blurreedImage = cv2.medianBlur(readImage, 7)
+	#Difuminado
+
+	#Mediana
+	#blurredImage = cv2.medianBlur(readImage, 7)
+
+	#Gausiana
+	blurredImage = cv2.GaussianBlur(readImage,(7,7),0)
+	#blurredImage = cv2.GaussianBlur(readImage,(13,3),0)
 
 	#Umbralizacion
+
+	#Normal
 	#_,preprocessedImage = cv2.threshold(readImage,70,255,cv2.THRESH_BINARY)
-	_,preprocessedImage = cv2.threshold(blurreedImage,70,255,cv2.THRESH_BINARY)
+	_,preprocessedImage = cv2.threshold(blurredImage,70,255,cv2.THRESH_BINARY)
 
 	#Umbralizacion adaptativa
 	#preprocessedImage = cv2.adaptiveThreshold(readImage, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 25, 4)
 	#preprocessedImage = cv2.adaptiveThreshold(blurredImage, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 25, 4)
+
+	#Metodo de Otsu
+	#_,preprocessedImage = cv2.threshold(readImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+	_,preprocessedImage = cv2.threshold(blurredImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
 	#Kernels
 	kernel2 = np.ones((2,2),np.uint8)
