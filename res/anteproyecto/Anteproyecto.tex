@@ -1,0 +1,109 @@
+\documentclass[12pt]{article}
+
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+% opening
+\title{\textbf{Anteproyecto}}
+\author{Bruno Cabado Lousa}
+
+
+\begin{document}
+% cuerpo del documento
+
+\begin{titlepage}		
+	\begin{center}
+		\includegraphics[width=6cm]{img/ficlogo.png} \\
+		\begin{Large}
+			\rule{\linewidth}{0.2 mm} \\[0.4 cm]
+			{\fontsize{28}{34}\selectfont\bfseries Aplicación de asistencia a la oftamología para el ajuste de lentes de contacto a medida en córneas irregulares} \\
+			\rule{\linewidth}{0.2 mm} \\[0.3 cm]
+		\end{Large}
+	
+		\Large Anteproyecto \\
+		\Large Proyecto Clásico de Ingienería \\
+		\Large Grado en Ingeniería Informática \\
+		\Large Mención en Computación \\ [0.5 cm]
+
+		\Large Alumno: Bruno Cabado Lousa \\ [0.1 cm]
+		\Large Director: Marcos Ortega Hortas \\ [0.8 cm]
+		\includegraphics[width=5cm]{img/udclogo.png}
+		
+	\end{center}		
+\end{titlepage}
+
+\tableofcontents
+
+\newpage
+\section{Objetivo}
+\paragraph{}
+El objetivo del desarrollo de esta aplicación es automatizar la medición de la distancia entre córnea y lente de contacto desde una imagen en plano sagital, asi como generar mapas que presenten de forma gráfica e intuitiva la relación entre la lente y córnea, con el fin de facilitar el cálculo de éstas lentes y por consiguiente, el proceso de adaptación a las mismas.
+
+\newpage
+\section{Descripción}
+\paragraph{}
+Las lentes de contacto son la primera solución correctora de elección para la rehabilitación visual de los pacientes con córnea irregular (pacientes con patologías como el queratocono, degeneración marginal pelúcida, trasplantes de córnea, traumatismos, etc.). \\
+
+Actualmente, las opciones en lente de contacto para córnea irregular disponibles son las lentes de contacto blandas, los diseños híbridos, las lentes gas permeables corneales, los sistemas en piggyback, las lentes corneo-esclerales, mini-esclerales y esclerales. En varios de estos diseños (hibridas, corneo-esclerales, mini-esclerales y esclerales) debe existir una ausencia o reducción del contacto con la córnea. \\
+
+Por ello, las imágenes AS-OCT, en combinación con la topografía corneal, se puede utilizar tanto para la detección de los cambios microestructurales de la córnea como el estudio de la relación entre la lente de contacto y la córnea para facilitar la 
+adaptación de éstas a los usuarios que las usen.
+
+\newpage
+\section{Material}
+\paragraph{}
+Para la realización de este proyecto será necesario el siguiente material:
+\begin{itemize}
+	\item Ordenador.
+	\item Imágenes de tomografía de coherencia óptica de segmento anterior (AS-OCT)\cite{AS-OCT} sobre las que se realizarán las mediciones.
+	\item Librerias de visión artificial como OpenCV\cite{cv2}.
+	\item Git\cite{git} como gestor de versiones y control del código fuente.
+	\item Lenguaje de programación que admita las librerias existentes (C++, Python, Java o Matlab).
+	\item Latex\cite{latex} para la redacción de la documentación del proyecto.
+\end{itemize}
+
+\newpage
+\section{Metodología}
+Para el desarrollo de esta utilidad se seguirá una metodología ágil e iterativa de desarrollo como es SCRUM, en cada iteración obtendremos una versión, que, dependiendo de los resultados de esta se decidirán las nuevas tareas y objetivos para la siguiente. 
+\paragraph{}
+
+\newpage
+\section{Fases}
+\paragraph{}
+\begin{enumerate}
+	\item Estudio de la bibliografia sobre técnicas de visión artificial usadas en imágenes AS-OCT.
+	\item Preprocesado de las imágenes con el fin de facilitar los posteriores pasos.
+	\item Detección de la zona superficial de la córnea y la superficie lenticular.
+	\item Generar mediciones entre lente y córnea con varias métricas.
+\end{enumerate}
+
+\newpage
+\clearpage
+\section{Referencias}
+\begin{thebibliography}{9}
+	\bibitem{AS-OCT}
+	Anterior Segment Optical Coherence Tomography \\ 
+	\url{https://www.opsweb.org/page/ASOCT?} 
+	
+	\bibitem{cv2}
+	Librería OpenCV \\
+	\url{https://opencv.org/}
+	
+	\bibitem{git}
+	Sistema de control de versiones Git \\
+	\url{https://git-scm.com/}
+	
+	\bibitem{latex}
+	Sistema de organización de documentos Latex\\
+	\url{https://www.latex-project.org/}
+	
+	\bibitem{scrum}
+	Metodología SCRUM\\
+	\url{https://es.wikipedia.org/wiki/Scrum_(desarrollo_de_software)}
+\end{thebibliography}
+
+\newpage
+\paragraph{}
+\end{document}

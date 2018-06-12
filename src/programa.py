@@ -21,80 +21,92 @@ def preprocessImage(readImage):
 	#Difuminado
 
 	#Mediana
-	#blurredImage = cv2.medianBlur(readImage, 7)
+	#blurredImage = cv2.medianBlur(readImage, 5)
 
 	#Gausiana
-	blurredImage = cv2.GaussianBlur(readImage,(7,7),0)
+	blurredImage = cv2.GaussianBlur(readImage,(3,3),0)
+	#blurredImage = cv2.GaussianBlur(readImage,(7,7),0)
 	#blurredImage = cv2.GaussianBlur(readImage,(13,3),0)
 
 	#Umbralizacion
 
 	#Normal
 	#_,preprocessedImage = cv2.threshold(readImage,70,255,cv2.THRESH_BINARY)
-	_,preprocessedImage = cv2.threshold(blurredImage,70,255,cv2.THRESH_BINARY)
+	##_,preprocessedImage = cv2.threshold(blurredImage,70,255,cv2.THRESH_BINARY)
 
 	#Umbralizacion adaptativa
 	#preprocessedImage = cv2.adaptiveThreshold(readImage, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 25, 4)
 	#preprocessedImage = cv2.adaptiveThreshold(blurredImage, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 25, 4)
 
-	#Metodo de Otsu
+	#Binarizacion de Otsu
 	#_,preprocessedImage = cv2.threshold(readImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-	_,preprocessedImage = cv2.threshold(blurredImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+	##_,preprocessedImage = cv2.threshold(blurredImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
 	#Kernels
-	kernel2 = np.ones((2,2),np.uint8)
+	'''kernel2 = np.ones((2,2),np.uint8)'''
 
-	kernel3 = np.array([[0,1,0],
+	'''kernel3 = np.array([[0,1,0],
 						[1,1,1],
-						[0,1,0]], np.uint8)
+						[0,1,0]], np.uint8)'''
 
-	kernel4 = np.array([[0,1,1,0],
+	'''kernel4 = np.array([[0,1,1,0],
 						[1,1,1,1],
 						[1,1,1,1],
-						[0,1,1,0]], np.uint8)
+						[0,1,1,0]], np.uint8)'''
 
-	kernel4b = np.array([[0,0,0,0],
+	'''kernel4b = np.array([[0,0,0,0],
 						[0,0,0,0],
 						[1,1,1,1],
-						[1,1,1,1]], np.uint8)
+						[1,1,1,1]], np.uint8)'''
 
-	kernel5 = np.array([[0,0,1,0,0],
+	'''kernel5 = np.array([[0,0,1,0,0],
 						[0,1,1,1,0],
 						[1,1,1,1,1],
 						[0,1,1,1,0],
-						[0,0,1,0,0]], np.uint8)
+						[0,0,1,0,0]], np.uint8)'''
 
-	kernel5b = np.array([[0,0,0,0,0],
+	'''kernel5b = np.array([[0,0,0,0,0],
 						[0,0,0,0,0],
 						[1,1,1,1,1],
 						[1,1,1,1,1],
-						[1,1,1,1,1]], np.uint8)
+						[1,1,1,1,1]], np.uint8)'''
 
-	kernel6 = np.array([[0,0,1,1,0,0],
+	'''kernel6 = np.array([[0,0,1,1,0,0],
 						[0,1,1,1,1,0],
 						[1,1,1,1,1,1],
 						[1,1,1,1,1,1],
 						[0,0,1,1,1,0],
-						[0,0,1,1,0,0]], np.uint8)
+						[0,0,1,1,0,0]], np.uint8)'''
 
-	kernel7 = np.array([[0,0,0,1,0,0,0],
+	'''kernel7 = np.array([[0,0,0,1,0,0,0],
 						[0,0,1,1,1,0,0],
 						[0,1,1,1,1,1,0],
 						[1,1,1,1,1,1,1],
 						[0,1,1,1,1,1,0],
 						[0,0,1,1,1,0,0],
-						[0,0,0,1,0,0,0]], np.uint8)
+						[0,0,0,1,0,0,0]], np.uint8)'''
 	
-	kernel8 = np.array([[0,0],
+	'''kernel8 = np.array([[0,0],
 						[0,0],
 						[0,0],
 						[0,0],
-						[1,1],], np.uint8)
+						[1,1],], np.uint8)'''
 	
 	
-	#PreprocessedImage = cv2.morphologyEx(preprocessedImage, cv2.MORPH_CLOSE, kernel8)
+	#closedImage = cv2.morphologyEx(preprocessedImage, cv2.MORPH_CLOSE, kernel7)
 	#openedPreprocessedImage = cv2.morphologyEx(closedPreprocessedImage, cv2.MORPH_OPEN, kernel2)
 	#PreprocessedImage = cv2.morphologyEx(preprocessedImage, cv2.MORPH_OPEN, kernel8)
+
+
+	#Sobel
+	#sobely = cv2.Sobel(preprocessedImage,cv2.CV_64F,0,1,ksize=5)
+	#preprocessedImage = sobely
+
+	#Canny
+	preprocessedImage = cv2.Canny(blurredImage,450,100,L2gradient=True)
+	#preprocessedImage = cv2.Canny(blurredImage,100,200)
+	#edges = cv2.Canny(preprocessedImage,100,200)
+	#preprocessedImage = edges
 
 	return preprocessedImage
 
