@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from os import listdir
 
-picturesPath = "../res/pictures"
+casesPath = "../res/pictures"
 saveImagePath = "../res/results"
 
 def preprocessImage(readImage):
@@ -111,22 +111,27 @@ def preprocessImage(readImage):
 	return preprocessedImage
 
 def seeComparative(image, imageName):
+	print(imageName)
 	cv2.imshow(imageName+" comparative", image)
 	cv2.waitKey(0)
 	cv2.destroyAllWindows()
 
-def saveComparative(image, imageName):
-	cv2.imwrite(saveImagePath+"/"+"comparative "+imageName,image)
+def saveComparative(image, imageName, folderPath):
+	cv2.imwrite(saveImagePath+"/"+folderPath+"/"+"comparative "+imageName,image)
 
 def main():
-	for imageName in listdir(picturesPath):
-		imageRoute = picturesPath+"/"+imageName
-		readImage = cv2.imread(imageRoute,0)
-		#cv2.imshow(imageName,readImage)
-		preprocessedImage = preprocessImage(readImage)
-		#cv2.imshow(imageName+" preprocessed",preprocessedImage)
-		res = np.hstack((readImage,preprocessedImage))
-		seeComparative(res, imageName)
-		saveComparative(res, imageName)
+	for case in listdir(casesPath):
+		if (case != ".DS_Store"): #No Contemplar ese archivo
+			casePath = casesPath+"/"+case
+			for imageName in listdir(casePath):
+				if (imageName != ".DS_Store"): #No Contemplar ese archivo
+					imageRoute = casePath+"/"+imageName
+					readImage = cv2.imread(imageRoute,0)
+					#cv2.imshow(imageName,readImage)
+					preprocessedImage = preprocessImage(readImage)
+					#cv2.imshow(imageName+" preprocessed",preprocessedImage)
+					result = np.hstack((readImage,preprocessedImage))
+					#seeComparative(result, imageName)
+					saveComparative(result, imageName, case)
 
 main()
