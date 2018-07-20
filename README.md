@@ -3,6 +3,8 @@ TFG Bruno Cabado Lousa oct
 
 Instalacion de paquetes en Linux:
 
+# Instalación
+## Instalación librerias en Linux:
 sudo apt update
 sudo apt upgrade
 
