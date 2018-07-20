@@ -6,6 +6,7 @@ Instalacion de paquetes en Linux:
 # Instalación
 ## Instalación librerias en Linux:
 sudo apt update
+
 sudo apt upgrade
 
 sudo apt-get install build-essential libssl-dev libffi-dev python3-dev
