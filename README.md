@@ -4,7 +4,7 @@ Grao en Enxeñaria Informática
 
 Proyecto clásico de Ingienería
 
-Computación
+Departamento de Computación
 
 ## Objetivo
 
