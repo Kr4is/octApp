@@ -13,8 +13,11 @@ El objetivo principal de este trabajo es el desarrollo de una aplicación que se
 ## Descripción
 
 Las lentes de contacto son la primera solución correctora de elección para la rehabilitación visual de los pacientes con córnea irregular (pacientes con patologías como el queratocono, degeneración marginal pelúcida, trasplantes de córnea, traumatismos, etc.).
+
 Actualmente, las opciones en lente de contacto para córnea irregular disponibles son las lentes de contacto blandas, los diseños híbridos, las lentes gas permeables corneales, los sistemas en piggyback, las lentes corneo-esclerales, mini-esclerales y esclerales. 
+
 En varios de estos diseños (hibridas, corneo-esclerales, mini-esclerales y esclerales) debe existir una ausencia o reducción del contacto con la córnea. Por ello, las imágenes AS-OCT, en combinación con la topografía corneal, se puede utilizar tanto para la detección de los cambios microestructurales de la córnea como para el estudio de la relación entre la lente de contacto y la córnea con el fin de facilitar la adaptación de éstas a los usuarios que las usen. 
+
 Cabe destacar que actualmente el experto no dispone de mecanismos para realizar estas mediciones de forma rápida y eliminando factores de subjetividad. Por esto es necesario un software que realice estos cálculos, capaz de aportar las medidas de una forma reproducible y objetiva.
 
 ## Material
