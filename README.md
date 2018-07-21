@@ -73,3 +73,16 @@ Instalación de la libreria MatPlotLib:
 Instalación de el paquete Scipy, el cual contiene ndimage:
 
 `pip3 install --user scipy ipython jupyter pandas sympy nose`
+
+## Mac
+
+Instalación con Macports:
+
+`sudo port install py35-numpy py35-scipy py35-matplotlib py35-ipython +notebook py35-pandas py35-sympy py35-nose`
+
+Instalación con Homebrew:
+
+`brew tap homebrew/science && brew install python numpy scipy matplotlib`
+
+## Windows
+
