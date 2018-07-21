@@ -37,8 +37,6 @@ Para el desarrollo de esta utilidad se seguirá una metodología ágil e iterati
 5. Mostrar las mediciones obtenidas de forma gráfica e intuitiva.
 
 
-Instalacion de paquetes en Linux:
-
 # Instalación
 ## Instalación librerias en Linux:
 `sudo apt update`
