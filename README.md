@@ -40,19 +40,25 @@ Para el desarrollo de esta utilidad se seguirá una metodología ágil e iterati
 
 
 # Instalación
-## Instalación librerias en Linux:
+## Linux
+Actualizamos el sistema:
 `sudo apt update`
-
 `sudo apt upgrade`
 
+Instalación del lenguaje:
 `sudo apt-get install build-essential libssl-dev libffi-dev python3-dev`
 
+Instalación del gestor de paquetes pip para Python 3:
 `sudo apt install python3-pip`
 
+Instalación de la libreria Numpy:
 `pip3 install --user numpy`
 
+Instalación de la libreria OpenCV:
 `pip3 install --user python-opencv`
 
+Instalación de la libreria MatPlotLib:
 `pip3 install --user matplotlib`
 
+Instalación de el paquete Scipy, el cual contiene ndimage:
 `pip3 install --user scipy ipython jupyter pandas sympy nose`
