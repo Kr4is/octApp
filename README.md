@@ -4,6 +4,8 @@ Grao en Enxeñaria Informática
 
 Proyecto clásico de Ingienería
 
+Computación
+
 ## Objetivo
 
 El objetivo principal de este trabajo es el desarrollo de una aplicación que sea capaz de automatizar las mediciones de la distancia entre córnea y lente de contacto desde una imagen en plano sagital, así como generar mapas que presenten de forma gráfica e intuitiva la relación entre lente y córnea, con el fin de facilitar el cálculo de éstas lentes y por consiguiente el proceso de adaptación a las mismas.
