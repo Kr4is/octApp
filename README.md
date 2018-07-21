@@ -43,9 +43,9 @@ Para el desarrollo de esta utilidad se seguirá una metodología ágil e iterati
 ## Linux
 Actualizamos el sistema:
 
-`sudo apt update
+`sudo apt update`
 
-sudo apt upgrade`
+`sudo apt upgrade`
 
 Instalación del lenguaje:
 
