@@ -10,23 +10,30 @@ casesPath = "../res/pictures"
 saveImagePath = "../res/results"
 
 def preprocessImage(readImage):
-	
-	#Difuminado
+    preprocessedImage = readImage
+    #Difuminado
+    #Mediana
+    preprocessedImage = cv2.medianBlur(preprocessedImage, 5)
+    #Gausiana
+    preprocessedImage = cv2.GaussianBlur(preprocessedImage,(3,3),0)
 
-	#Gausiana
-	preprocessedImage = cv2.GaussianBlur(readImage,(3,3),0)
+    claheOfImage = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4,4))
+    preprocessedImage = claheOfImage.apply(preprocessedImage)
 
-	#Canny
-	#preprocessedImage = cv2.Canny(preprocessedImage,450,100,L2gradient=True)
+    _,preprocessedImage = cv2.threshold(preprocessedImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-	return preprocessedImage
+    #Canny
+    #preprocessedImage = cv2.Canny(preprocessedImage,450,100,L2gradient=True)
+    return preprocessedImage
 
-def seeComparative(image, imageName):
-    plt.imshow(image)
+def seeComparative(initialImage, resultImage, imageName):
+    comparative = np.concatenate((initialImage,resultImage), axis=1)
+    plt.imshow(comparative)
     plt.show()
-	#cv2.imshow(imageName+" comparative", image)
-	#cv2.waitKey()
-	#cv2.destroyAllWindows()
+
+def seeResult(resultImage, imageName):
+    plt.imshow(resultImage)
+    plt.show()
 
 def saveComparative(image, imageName, folderPath):
 	cv2.imwrite(saveImagePath+"/"+folderPath+"/"+"comparative "+imageName,image)
@@ -37,13 +44,9 @@ def main():
         for imageName in listdir(casePath):
             imageRoute = casePath+"/"+imageName
             readImage = cv2.imread(imageRoute,0)
-            #cv2.imshow(imageName,readImage)
             preprocessedImage = preprocessImage(readImage)
-            #cv2.imshow(imageName+" preprocessed",preprocessedImage)
-            #result = np.hstack((readImage,preprocessedImage))
             result = preprocessedImage
-            seeComparative(result, imageName)
-            #saveComparative(result, imageName, case)
+            seeComparative(readImage, result, imageName)
     else:
         print("Introducir numero de caso (0-17), solo uno")
 
