@@ -85,4 +85,6 @@ Instalación con Homebrew:
 `brew tap homebrew/science && brew install python numpy scipy matplotlib`
 
 ## Windows
+Descargar la Ultima versión de Python3 desde la pagina oficial:
 
+https://www.python.org/downloads/windows/
