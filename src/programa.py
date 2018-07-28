@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import cv2
 import numpy as np
 from os import listdir
@@ -111,7 +111,7 @@ def preprocessImage(readImage):
 	return preprocessedImage
 
 def seeComparative(image, imageName):
-	print(imageName)
+	print(image)
 	cv2.imshow(imageName+" comparative", image)
 	cv2.waitKey(0)
 	cv2.destroyAllWindows()
