@@ -9,26 +9,55 @@ from matplotlib import pyplot as plt
 casesPath = "../res/pictures"
 saveImagePath = "../res/results"
 
-def preprocessImage(readImage):
-    preprocessedImage = readImage
+
+def imageImprovement(readImage):
+    improvedImage = readImage
     #Difuminado
     #Mediana
-    preprocessedImage = cv2.medianBlur(preprocessedImage, 5)
+    improvedImage = cv2.medianBlur(improvedImage, 5)
     #Gausiana
-    preprocessedImage = cv2.GaussianBlur(preprocessedImage,(3,3),0)
+    improvedImage = cv2.GaussianBlur(improvedImage,(3,3),0)
 
+    #Ecualizacion adaptativa clahe
     claheOfImage = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4,4))
-    preprocessedImage = claheOfImage.apply(preprocessedImage)
+    improvedImage = claheOfImage.apply(improvedImage)
 
-    _,preprocessedImage = cv2.threshold(preprocessedImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    #Umbralización OTSU
+    _,improvedImage = cv2.threshold(improvedImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-    #Canny
-    #preprocessedImage = cv2.Canny(preprocessedImage,450,100,L2gradient=True)
-    return preprocessedImage
+    return improvedImage
 
-def seeComparative(initialImage, resultImage, imageName):
-    comparative = np.concatenate((initialImage,resultImage), axis=1)
+def imageMorphology(readImage):
+    morphImage = readImage
+
+    closeKernel = np.ones((3,3),np.uint8)
+    morphImage = cv2.morphologyEx(morphImage, cv2.MORPH_CLOSE, closeKernel)
+    morphImage = cv2.morphologyEx(morphImage, cv2.MORPH_CLOSE, closeKernel)
+    morphImage = cv2.morphologyEx(morphImage, cv2.MORPH_CLOSE, closeKernel)
+
+    return morphImage
+
+def preprocessImage(readImage):
+    preprocessedImage = readImage
+    
+    improvedImage = imageImprovement(preprocessedImage)
+    preprocessedImage = imageMorphology(improvedImage)
+
+    return preprocessedImage, improvedImage
+
+def edgeDetection(readImage):
+    edgeDetected = readImage
+    edgeDetected = cv2.Canny(edgeDetected,450,100,L2gradient=True)
+    return edgeDetected
+
+def seeComparative(initialImage,images):
+    comparative = initialImage
+    for image in images:
+        comparative = np.concatenate((comparative,image), axis=1)
     plt.imshow(comparative)
+    mng = plt.get_current_fig_manager()
+    #mng.resize(*mng.window.maxsize())
+    mng.full_screen_toggle()
     plt.show()
 
 def seeResult(resultImage, imageName):
@@ -39,14 +68,14 @@ def saveComparative(image, imageName, folderPath):
 	cv2.imwrite(saveImagePath+"/"+folderPath+"/"+"comparative "+imageName,image)
 
 def main():
-    if (len(sys.argv) == 2):
+    if (len(sys.argv) == 2 and (int(sys.argv[1])>=0) and (int(sys.argv[1]) <= 17)):
         casePath = casesPath+"/case"+str(sys.argv[1])
         for imageName in listdir(casePath):
             imageRoute = casePath+"/"+imageName
             readImage = cv2.imread(imageRoute,0)
-            preprocessedImage = preprocessImage(readImage)
-            result = preprocessedImage
-            seeComparative(readImage, result, imageName)
+            preprocessedImage, improvedImage = preprocessImage(readImage)
+            edgeDetected = edgeDetection(preprocessedImage)
+            seeComparative(readImage,[improvedImage, preprocessedImage, edgeDetected])
     else:
         print("Introducir numero de caso (0-17), solo uno")
 
