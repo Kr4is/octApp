@@ -88,3 +88,16 @@ Instalación con Homebrew:
 Descargar la Ultima versión de Python3 desde la pagina oficial:
 
 https://www.python.org/downloads/windows/
+
+Descargar la libreria Pillow mediante pip:
+
+`pip install pillow`
+
+Descargar los siguentes binarios no oficiales desde la página siguiente:
+
+https://www.lfd.uci.edu/~gohlke/pythonlibs/
+
+numpy
+cv2
+scipy
+matplotlib
