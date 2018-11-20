@@ -97,12 +97,16 @@ Instalar numpy mediante pip:
 
 `pip install numpy`
 
+Instalar scipy mediante pip:
+
+`pip install scipy`
+
+Instalar matplotlib mediante pip:
+
+`pip install matplotlib`
+
 Descargar los siguentes binarios no oficiales desde la página siguiente:
 
 https://www.lfd.uci.edu/~gohlke/pythonlibs/
 
 cv2
-
-scipy
-
-matplotlib
