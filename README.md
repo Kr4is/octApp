@@ -110,3 +110,7 @@ Descargar los siguentes binarios no oficiales desde la página siguiente:
 https://www.lfd.uci.edu/~gohlke/pythonlibs/
 
 cv2
+
+Instalar el binario descargado mediante pip:
+
+`pip install ruta del binario descargado`
