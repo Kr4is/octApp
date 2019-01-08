@@ -16,10 +16,10 @@ def imageImprovement(readImage):
     #Mediana
     improvedImage = cv2.medianBlur(improvedImage, 5)
     #Gausiana
-    improvedImage = cv2.GaussianBlur(improvedImage,(3,3),0)
+    improvedImage = cv2.GaussianBlur(improvedImage, (3, 3), 0)
 
     #Ecualizacion adaptativa clahe
-    claheOfImage = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4,4))
+    claheOfImage = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
     improvedImage = claheOfImage.apply(improvedImage)
 
     #Umbralización OTSU
@@ -50,6 +50,15 @@ def edgeDetection(readImage):
     edgeDetected = cv2.Canny(edgeDetected,450,100,L2gradient=True)
     return edgeDetected
 
+def linesDetection(readImage, initImage):
+    minLineLength = 300
+    maxLineGap = 7
+    lines = cv2.HoughLinesP(readImage,1,np.pi/180,15,minLineLength,maxLineGap)
+    for x in range(0, len(lines)):
+        for x1,y1,x2,y2 in lines[x]:
+            cv2.line(initImage,(x1,y1),(x2,y2),(255,255,255),2)
+    return initImage
+
 def seeComparative(initialImage,images):
     comparative = initialImage
     for image in images:
@@ -75,7 +84,8 @@ def main():
             readImage = cv2.imread(imageRoute,0)
             preprocessedImage, improvedImage = preprocessImage(readImage)
             edgeDetected = edgeDetection(preprocessedImage)
-            seeComparative(readImage,[improvedImage, preprocessedImage, edgeDetected])
+            linesDetected = linesDetection(edgeDetected, readImage)
+            seeComparative(readImage,[improvedImage, preprocessedImage, edgeDetected, linesDetected])
     else:
         print("Introducir numero de caso (0-17), solo uno")
 
