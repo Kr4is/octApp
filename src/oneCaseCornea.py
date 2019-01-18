@@ -14,16 +14,16 @@ def imageImprovement(readImage):
     improvedImage = readImage
     #Difuminado
     #Mediana
-    improvedImage = cv2.medianBlur(improvedImage, 5)
+    #improvedImage = cv2.medianBlur(improvedImage, 11)
     #Gausiana
-    improvedImage = cv2.GaussianBlur(improvedImage, (3, 3), 0)
+    #improvedImage = cv2.GaussianBlur(improvedImage, (3, 3), 0)
 
     #Ecualizacion adaptativa clahe
     claheOfImage = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
     improvedImage = claheOfImage.apply(improvedImage)
 
     #Umbralización OTSU
-    _,improvedImage = cv2.threshold(improvedImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    #_,improvedImage = cv2.threshold(improvedImage,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
     return improvedImage
 
@@ -37,7 +37,6 @@ def imageMorphology(readImage):
     #morphImage = cv2.morphologyEx(morphImage, cv2.MORPH_CLOSE, closeKernel)
     morphImage = cv2.morphologyEx(morphImage, cv2.MORPH_CLOSE, closeKernel)
     
-
     return morphImage
 
 def preprocessImage(readImage):
@@ -50,7 +49,7 @@ def preprocessImage(readImage):
 
 def edgeDetection(readImage):
     edgeDetected = readImage
-    edgeDetected = cv2.Canny(edgeDetected,450,100,L2gradient=True)
+    edgeDetected = cv2.Canny(edgeDetected,425,150,L2gradient=True)
     return edgeDetected
 
 def linesDetection(readImage, initImage):
@@ -87,8 +86,8 @@ def main():
             readImage = cv2.imread(imageRoute,0)
             preprocessedImage, improvedImage = preprocessImage(readImage)
             edgeDetected = edgeDetection(preprocessedImage)
-            linesDetected = linesDetection(preprocessedImage, readImage)
-            seeComparative(readImage,[improvedImage, preprocessedImage, edgeDetected, linesDetected])
+            linesDetected = linesDetection(edgeDetected, readImage)
+            seeComparative(readImage, [improvedImage, preprocessedImage, edgeDetected, linesDetected])
     else:
         print("Introducir numero de caso (0-17), solo uno")
 
