@@ -52,65 +52,12 @@ Actualizamos el sistema:
 
 Instalación del lenguaje:
 
-`sudo apt-get install build-essential libssl-dev libffi-dev python3-dev`
+`sudo apt-get install python3`
 
 Instalación del gestor de paquetes pip para Python 3:
 
 `sudo apt install python3-pip`
 
-Instalación de la libreria Numpy:
+Instalación de las librerias:
 
-`pip3 install --user numpy`
-
-Instalación de la libreria OpenCV:
-
-`pip3 install --user python-opencv`
-
-Instalación de la libreria MatPlotLib:
-
-`pip3 install --user matplotlib`
-
-Instalación de el paquete Scipy, el cual contiene ndimage:
-
-`pip3 install --user scipy ipython jupyter pandas sympy nose`
-
-## Mac
-
-Instalación con Macports:
-
-`sudo port install py35-numpy py35-scipy py35-matplotlib py35-ipython +notebook py35-pandas py35-sympy py35-nose`
-
-Instalación con Homebrew:
-
-`brew tap homebrew/science && brew install python numpy scipy matplotlib`
-
-## Windows
-Descargar la Ultima versión de Python3 desde la pagina oficial:
-
-https://www.python.org/downloads/windows/
-
-Instalar la libreria Pillow mediante pip:
-
-`pip install pillow`
-
-Instalar numpy mediante pip:
-
-`pip install numpy`
-
-Instalar scipy mediante pip:
-
-`pip install scipy`
-
-Instalar matplotlib mediante pip:
-
-`pip install matplotlib`
-
-Descargar los siguentes binarios no oficiales desde la página siguiente:
-
-https://www.lfd.uci.edu/~gohlke/pythonlibs/
-
-cv2
-
-Instalar el binario descargado mediante pip:
-
-`pip install ruta del binario descargado`
+`pip install numpy opencv colorsys pyqt5`
