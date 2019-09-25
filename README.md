@@ -61,3 +61,10 @@ Instalación del gestor de paquetes pip para Python 3:
 Instalación de las librerias:
 
 `pip install numpy opencv colorsys pyqt5`
+
+Ejecución octApp:
+
+`python3 octApp.py`
+
+# Licencia
+Este proyecto se encuentra bajo la licencia GPLv3. (ver COPYING.txt)
