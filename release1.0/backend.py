@@ -72,7 +72,7 @@ def edgeDetection(readImage):
     return edgeDetected
 
 def getCountours(img,thr=100,method='perimeter'):
-    im2,cont,hier = cv2.findContours(img,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+    cont, hier = cv2.findContours(img,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
     cont2 = []
     for c in cont:
         val = None
@@ -128,25 +128,86 @@ def getUpPointDistances(img, funcDown, funcUp):
         points.append(((x,int(round(y1))),(x,int(round(y2)))))
         distances.append((y1-y2))
     return points, distances
+def processImage(readImage):
+    # Reducimos la resolución para procesamiento más rápido
+    scale_percent = 50  # porcentaje del tamaño original
+    width = int(readImage.shape[1] * scale_percent / 100)
+    height = int(readImage.shape[0] * scale_percent / 100)
+    dim = (width, height)
+    resized = cv2.resize(readImage, dim, interpolation=cv2.INTER_AREA)
+    
+    # Procesamos la imagen redimensionada
+    preprocessedImage = preprocessImage(resized)
+    edgeDetected = edgeDetection(preprocessedImage)
+    
+    # Redimensionamos de vuelta al tamaño original
+    edgeDetected = cv2.resize(edgeDetected, (readImage.shape[1], readImage.shape[0]), 
+                             interpolation=cv2.INTER_LINEAR)
+    return edgeDetected
+
+def getCurves(readImage, readImageBGR):
+    try:
+        # Procesamos la imagen una sola vez
+        processedImage = processImage(readImage)
+        
+        # Evitamos escribir a disco
+        preImg = processedImage
+        
+        # Optimizamos la búsqueda de contornos
+        cont = getCountours(preImg, 800, method='area')  # Cambiamos a área para mejor detección
+        if not cont:
+            return lambda x: 0, lambda x: 0
+            
+        # Obtenemos los contornos más grandes
+        bc = getBiggestNCont(cont, 4, method='area')
+        if len(bc) < 4:
+            return lambda x: 0, lambda x: 0
+            
+        # Obtenemos centroides
+        centroids = getCentroids(bc)
+        if len(centroids) < 3:  # Necesitamos al menos 3 (1 para eliminar + 2 para curvas)
+            return lambda x: 0, lambda x: 0
+            
+        # Eliminamos el primer centroide (normalmente el contorno exterior)
+        centroids.pop(0)
+        
+        # Interpolamos curvas
+        funcUp = interpCurve(centroids[0])
+        funcDown = interpCurve(centroids[1])
+        
+        return funcUp, funcDown
+        
+    except Exception as e:
+        print(f"Error en getCurves: {str(e)}")
+        return lambda x: 0, lambda x: 0
+
+def getCountours(img, thr=100, method='perimeter'):
+    # Optimizamos la detección de contornos
+    cont, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    return [c for c in cont if (cv2.arcLength(c, True) if method == 'perimeter' else cv2.contourArea(c)) > thr]
 
 def getNearestPointDistances(img, funcDown, funcUp):
     width = img.shape[1]
     points = []
     distances = []
+    
+    # Vectorizamos los cálculos para mejor rendimiento
+    x_range = np.arange(width)
+    y1_values = funcDown(x_range)
+    y2_values = funcUp(x_range)
+    
     for x1 in range(width):
-        distance = sys.maxsize
-        point = (-1,-1)
-        y1 = funcDown(x1)
-        for x2 in range(width):
-            y2 = funcUp(x2)
-            newDistance = math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
-            if (distance > newDistance):
-                distance = newDistance
-                point = (x2,int(round(y2)))
-        points.append(((x1,int(round(y1))),point))
-        distances.append(distance)
+        y1 = y1_values[x1]
+        # Calculamos todas las distancias de una vez
+        x_diff = x_range - x1
+        y_diff = y2_values - y1
+        distances_array = np.sqrt(x_diff**2 + y_diff**2)
+        min_idx = np.argmin(distances_array)
+        
+        points.append(((x1, int(round(y1))), (int(x_range[min_idx]), int(round(y2_values[min_idx])))))
+        distances.append(distances_array[min_idx])
+    
     return points, distances
-
 def printDistances(img, distances, points):
     numRanges = 100
     maxDistance = max(distances)
@@ -220,7 +281,6 @@ def printContoursAndCentroids(img, cc):
         color = (r,g,b)
         cv2.drawContours(img,[c[1]],0,color,3)
         cv2.circle(img,c[0], 5, color, -1)
-
 def processImage(readImage):
 	preprocessedImage = preprocessImage(readImage)
 	edgeDetected = edgeDetection(preprocessedImage)
