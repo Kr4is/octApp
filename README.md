@@ -1,70 +1,80 @@
-# Aplicación de asistencia a la oftamología para el ajuste de lentes de contacto a medida en córneas irregulares
+<div align="center">
 
-Grao en Enxeñaria Informática
+# OctApp
+### Aplicación de asistencia a la oftalmología para el ajuste de lentes de contacto a medida en córneas irregulares
 
-Proyecto clásico de Ingienería
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Python](https://img.shields.io/badge/Python-3.6+-blue.svg)](https://www.python.org/downloads/)
+[![OpenCV](https://img.shields.io/badge/OpenCV-4.x-green.svg)](https://opencv.org/)
 
-Departamento de Computación
+*Proyecto de Ingeniería - Grado en Ingeniería Informática*  
+*Departamento de Computación - Universidade da Coruña*
 
-## Objetivo
+</div>
+
+## 🎯 Objetivo
 
 El objetivo principal de este trabajo es el desarrollo de una aplicación que sea capaz de automatizar las mediciones de la distancia entre córnea y lente de contacto desde una imagen en plano sagital, así como generar mapas que presenten de forma gráfica e intuitiva la relación entre lente y córnea, con el fin de facilitar el cálculo de éstas lentes y por consiguiente el proceso de adaptación a las mismas.
 
-## Descripción
+## 📋 Descripción
 
 Las lentes de contacto son la primera solución correctora de elección para la rehabilitación visual de los pacientes con córnea irregular (pacientes con patologías como el queratocono, degeneración marginal pelúcida, trasplantes de córnea, traumatismos, etc.).
 
-Actualmente, las opciones en lente de contacto para córnea irregular disponibles son las lentes de contacto blandas, los diseños híbridos, las lentes gas permeables corneales, los sistemas en piggyback, las lentes corneo-esclerales, mini-esclerales y esclerales. 
+Actualmente, las opciones en lente de contacto para córnea irregular disponibles son:
+- Lentes de contacto blandas
+- Diseños híbridos
+- Lentes gas permeables corneales
+- Sistemas en piggyback
+- Lentes corneo-esclerales
+- Mini-esclerales y esclerales
 
-En varios de estos diseños (hibridas, corneo-esclerales, mini-esclerales y esclerales) debe existir una ausencia o reducción del contacto con la córnea. Por ello, las imágenes AS-OCT, en combinación con la topografía corneal, se puede utilizar tanto para la detección de los cambios microestructurales de la córnea como para el estudio de la relación entre la lente de contacto y la córnea con el fin de facilitar la adaptación de éstas a los usuarios que las usen. 
+En varios de estos diseños debe existir una ausencia o reducción del contacto con la córnea. Por ello, las imágenes AS-OCT, en combinación con la topografía corneal, se pueden utilizar tanto para la detección de los cambios microestructurales de la córnea como para el estudio de la relación entre la lente de contacto y la córnea.
 
-Cabe destacar que actualmente el experto no dispone de mecanismos para realizar estas mediciones de forma rápida y eliminando factores de subjetividad. Por esto es necesario un software que realice estos cálculos, capaz de aportar las medidas de una forma reproducible y objetiva.
+## 🛠️ Material
 
-## Material
+- 💻 Ordenador
+- 🔍 Imágenes AS-OCT (Tomografía de coherencia óptica de segmento anterior)
+- 📚 Librerías:
+  - OpenCV para visión artificial
+  - NumPy para cálculos numéricos
+  - PyQt5 para interfaz gráfica
+- 🔄 Git para control de versiones
+- 📝 LaTeX para documentación
 
-- Ordenador. 
-- Imágenes de tomografía de coherencia óptica de segmento anterior (AS-OCT) sobre las que se realizarán las mediciones. 
-- Librerias de visión artificial como OpenCV. 
-- Git como gestor de versiones y control del código fuente. 
-- Lenguaje de programación que admita las librerias existentes (C++, Python, Java o Matlab). 
-- Latex para la redacción de la documentación del proyecto.
+## 📊 Metodología
 
-## Metodología
+Se utiliza una metodología ágil SCRUM con desarrollo iterativo, donde cada iteración produce una versión funcional que guía los objetivos de la siguiente fase.
 
-Para el desarrollo de esta utilidad se seguirá una metodología ágil e iterativa de desarrollo como es SCRUM, en cada iteración obtendremos una versión, que, dependiendo de los resultados de ésta se decidirán las nuevas tareas y objetivos para la siguiente.
+## 🔄 Fases del Proyecto
 
-## Fases
+1. 📚 Estudio bibliográfico de técnicas de visión artificial en imágenes AS-OCT
+2. 🖼️ Preprocesado de imágenes
+3. 🎯 Detección de superficies (córnea y lente)
+4. 📏 Generación de mediciones
+5. 📊 Visualización de resultados
 
-1. Estudio de la bibliografia sobre técnicas de visión artificial usadas en imágenes AS-OCT. 
-2. Preprocesado de las imágenes con el fin de facilitar los posteriores pasos. 
-3. Detección de la zona superficial de la córnea y la superficie lenticular. 
-4. Generar mediciones entre lente y córnea con varias métricas. 
-5. Mostrar las mediciones obtenidas de forma gráfica e intuitiva.
+## ⚙️ Instalación
 
+### Linux
+```bash
+# Actualizar sistema
+sudo apt update && sudo apt upgrade
 
-# Instalación
-## Linux
-Actualizamos el sistema:
+# Instalar Python y pip
+sudo apt-get install python3 python3-pip
 
-`sudo apt update`
+# Instalar dependencias
+pip install numpy opencv-python pyqt5
+```
 
-`sudo apt upgrade`
+## Ejecución
 
-Instalación del lenguaje:
+```bash
+python3 octApp.py
+```
 
-`sudo apt-get install python3`
+## 📄 Licencia
 
-Instalación del gestor de paquetes pip para Python 3:
+Este proyecto está bajo la licencia GNU General Public License v3.0
 
-`sudo apt install python3-pip`
-
-Instalación de las librerias:
-
-`pip install numpy opencv colorsys pyqt5`
-
-Ejecución octApp:
-
-`python3 octApp.py`
-
-# Licencia
-Este proyecto se encuentra bajo la licencia GPLv3. (ver COPYING.txt)
+Desarrollado con ❤️ para la comunidad oftalmológica
