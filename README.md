@@ -1,80 +1,80 @@
 <div align="center">
 
 # OctApp
-### Aplicación de asistencia a la oftalmología para el ajuste de lentes de contacto a medida en córneas irregulares
+### Ophthalmology Assistance Application for Custom Contact Lens Fitting on Irregular Corneas
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python](https://img.shields.io/badge/Python-3.6+-blue.svg)](https://www.python.org/downloads/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.x-green.svg)](https://opencv.org/)
 
-*Proyecto de Ingeniería - Grado en Ingeniería Informática*  
-*Departamento de Computación - Universidade da Coruña*
+*Engineering Project - Bachelor's Degree in Computer Engineering*  
+*Department of Computing - Universidade da Coruña*
 
 </div>
 
-## 🎯 Objetivo
+## 🎯 Objective
 
-El objetivo principal de este trabajo es el desarrollo de una aplicación que sea capaz de automatizar las mediciones de la distancia entre córnea y lente de contacto desde una imagen en plano sagital, así como generar mapas que presenten de forma gráfica e intuitiva la relación entre lente y córnea, con el fin de facilitar el cálculo de éstas lentes y por consiguiente el proceso de adaptación a las mismas.
+The primary goal of this project is to develop an application capable of automating the measurement of the distance between the cornea and the contact lens from a sagittal plane image. Additionally, it aims to generate graphical and intuitive maps representing the lens-to-cornea relationship, facilitating the calculation of these lenses and improving the adaptation process.
 
-## 📋 Descripción
+## 📋 Description
 
-Las lentes de contacto son la primera solución correctora de elección para la rehabilitación visual de los pacientes con córnea irregular (pacientes con patologías como el queratocono, degeneración marginal pelúcida, trasplantes de córnea, traumatismos, etc.).
+Contact lenses are the preferred corrective solution for visual rehabilitation in patients with irregular corneas (e.g., keratoconus, pellucid marginal degeneration, corneal transplants, trauma, etc.).
 
-Actualmente, las opciones en lente de contacto para córnea irregular disponibles son:
-- Lentes de contacto blandas
-- Diseños híbridos
-- Lentes gas permeables corneales
-- Sistemas en piggyback
-- Lentes corneo-esclerales
-- Mini-esclerales y esclerales
+Currently, available contact lens options for irregular corneas include:
+- Soft contact lenses
+- Hybrid designs
+- Corneal gas-permeable lenses
+- Piggyback systems
+- Corneo-scleral lenses
+- Mini-scleral and scleral lenses
 
-En varios de estos diseños debe existir una ausencia o reducción del contacto con la córnea. Por ello, las imágenes AS-OCT, en combinación con la topografía corneal, se pueden utilizar tanto para la detección de los cambios microestructurales de la córnea como para el estudio de la relación entre la lente de contacto y la córnea.
+For several of these designs, there must be little to no contact with the cornea. AS-OCT images, combined with corneal topography, can be used both for detecting corneal microstructural changes and for studying the relationship between the contact lens and the cornea.
 
-## 🛠️ Material
+## 🛠️ Requirements
 
-- 💻 Ordenador
-- 🔍 Imágenes AS-OCT (Tomografía de coherencia óptica de segmento anterior)
-- 📚 Librerías:
-  - OpenCV para visión artificial
-  - NumPy para cálculos numéricos
-  - PyQt5 para interfaz gráfica
-- 🔄 Git para control de versiones
-- 📝 LaTeX para documentación
+- 💻 Computer
+- 🔍 AS-OCT Images (Anterior Segment Optical Coherence Tomography)
+- 📚 Libraries:
+  - OpenCV for computer vision
+  - NumPy for numerical computations
+  - PyQt5 for graphical interface
+- 🔄 Git for version control
+- 📝 LaTeX for documentation
 
-## 📊 Metodología
+## 📊 Methodology
 
-Se utiliza una metodología ágil SCRUM con desarrollo iterativo, donde cada iteración produce una versión funcional que guía los objetivos de la siguiente fase.
+An agile SCRUM methodology is used with iterative development, where each iteration delivers a functional version guiding the objectives of the next phase.
 
-## 🔄 Fases del Proyecto
+## 🔄 Project Phases
 
-1. 📚 Estudio bibliográfico de técnicas de visión artificial en imágenes AS-OCT
-2. 🖼️ Preprocesado de imágenes
-3. 🎯 Detección de superficies (córnea y lente)
-4. 📏 Generación de mediciones
-5. 📊 Visualización de resultados
+1. 📚 Literature review on computer vision techniques for AS-OCT images
+2. 🖼️ Image preprocessing
+3. 🎯 Surface detection (cornea and lens)
+4. 📏 Measurement generation
+5. 📊 Results visualization
 
-## ⚙️ Instalación
+## ⚙️ Installation
 
 ### Linux
 ```bash
-# Actualizar sistema
+# Update system
 sudo apt update && sudo apt upgrade
 
-# Instalar Python y pip
+# Install Python and pip
 sudo apt-get install python3 python3-pip
 
-# Instalar dependencias
+# Install dependencies
 pip install numpy opencv-python pyqt5
 ```
 
-## Ejecución
-
+## 🚀 Running the Application
 ```bash
 python3 octApp.py
 ```
 
-## 📄 Licencia
+## 📄 License
 
-Este proyecto está bajo la licencia GNU General Public License v3.0
+This project is licensed under the GNU General Public License v3.0.
 
-Desarrollado con ❤️ para la comunidad oftalmológica
+Developed with ❤️ for the ophthalmology community.
+
