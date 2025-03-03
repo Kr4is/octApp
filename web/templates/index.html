@@ -1,86 +1,133 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OCT App Web</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCT Vision Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .image-container {
+            height: 65vh;
+            min-height: 500px;
+        }
+        @media (max-width: 768px) {
+            .image-container {
+                height: 50vh;
+                min-height: 300px;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-  <div class="container mx-auto px-4 py-8">
-    <div class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
-      <h1 class="text-3xl font-bold text-gray-800 mb-6">OCT Image Analysis</h1>
-      
-      <!-- Sección de carga -->
-      <div class="mb-8">
-        <input type="file" id="imageInput" class="hidden" accept="image/*"/>
-        <label
-          for="imageInput"
-          class="bg-blue-500 text-white px-6 py-2 rounded-lg cursor-pointer hover:bg-blue-600 transition-colors"
-        >
-          Upload OCT Image
-        </label>
-      </div>
-
-      <!-- Visualización de la imagen con canvas superpuesto -->
-      <div class="relative border-2 border-dashed border-gray-200 rounded-lg p-4 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Original Image with Overlay</h2>
-        <img id="originalImage" class="w-full h-96 object-contain" src=""/>
-        <!-- Canvas superpuesto -->
-        <canvas id="overlayCanvas" class="absolute top-0 left-0 z-10"></canvas>
-      </div>
-
-      <!-- Controles -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        
-        <!-- Tipo de distancia -->
-        <div class="bg-gray-50 p-4 rounded-lg">
-          <h3 class="font-semibold mb-2">Distance Type</h3>
-          <div class="space-y-2">
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="distanceType" value="up" checked class="form-radio"/>
-              <span>Up Point Distance</span>
-            </label>
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="distanceType" value="euclidean" class="form-radio"/>
-              <span>Euclidean Distance</span>
-            </label>
-          </div>
+<body class="bg-gray-50 min-h-screen font-['Inter']">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Cabecera con botón de subida -->
+        <div class="text-center mb-8 space-y-4">
+            <h1 class="text-3xl font-bold text-gray-900">OCT Vision Pro</h1>
+            <div>
+                <input type="file" id="imageInput" class="hidden" accept="image/*">
+                <label for="imageInput" class="inline-flex items-center px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors cursor-pointer shadow-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    <span class="text-sm">Upload OCT Image</span>
+                </label>
+            </div>
         </div>
 
-        <!-- Slider -->
-        <div class="bg-gray-50 p-4 rounded-lg">
-          <div class="flex justify-between mb-2">
-            <span>X Position:</span>
-            <span id="xValue">0</span>
-          </div>
-          <input
-            type="range"
-            id="xSlider"
-            min="0"
-            max="1000"
-            value="0"
-            class="w-full cursor-pointer"
-          />
+        <!-- Contenedor principal -->
+        <div class="space-y-8">
+            <!-- Sección de imagen -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden image-container">
+                <div class="relative h-full w-full">
+                    <img id="originalImage" class="w-full h-full object-contain"/>
+                    <canvas id="overlayCanvas" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
+                </div>
+            </div>
+
+            <!-- Panel de controles -->
+            <div class="bg-white rounded-xl shadow-lg p-6 space-y-6">
+                <!-- Primera fila de controles -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Tipo de medición -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Measurement Type</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center space-x-3">
+                                <input type="radio" name="distanceType" value="up" checked 
+                                    class="form-radio h-5 w-5 text-indigo-600 border-2">
+                                <span class="text-gray-700">Vertical Distance</span>
+                            </label>
+                            <label class="flex items-center space-x-3">
+                                <input type="radio" name="distanceType" value="euclidean" 
+                                    class="form-radio h-5 w-5 text-indigo-600 border-2">
+                                <span class="text-gray-700">Euclidean Distance</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Control deslizante -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Position Control</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm text-gray-600">
+                                <span>0 px</span>
+                                <span id="xValue">0</span>
+                                <span id="maxX">1000 px</span>
+                            </div>
+                            <input type="range" id="xSlider" min="0" max="1000" value="0" 
+                                class="w-full h-2 bg-gray-200 rounded-full accent-indigo-600">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Segunda fila de controles -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Opciones de visualización -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Display Options</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center space-x-3">
+                                <input type="checkbox" id="showAll" 
+                                    class="form-checkbox h-5 w-5 text-indigo-600 rounded border-2">
+                                <span class="text-gray-700">Show All Points</span>
+                            </label>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-700">Show Curves</span>
+                                <button id="toggleCurvesBtn" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full bg-gray-200 transition-colors">
+                                    <span class="sr-only">Toggle</span>
+                                    <span class="translate-x-0.5 inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Statistics</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-3 bg-indigo-50 rounded-lg">
+                                <div class="text-sm text-indigo-600">Min Distance</div>
+                                <div class="text-xl font-bold text-gray-900" id="minDistance">0.00</div>
+                            </div>
+                            <div class="p-3 bg-indigo-50 rounded-lg">
+                                <div class="text-sm text-indigo-600">Max Distance</div>
+                                <div class="text-xl font-bold text-gray-900" id="maxDistance">0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Checkbox Mostrar todos los puntos -->
-        <div class="bg-gray-50 p-4 rounded-lg flex items-center">
-          <input type="checkbox" id="showAll" class="form-checkbox mr-2"/>
-          <label for="showAll">Mostrar todos</label>
+        <!-- Footer -->
+        <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+            <p class="text-sm text-gray-500">
+                OCT Vision Pro &copy; 2024 | Medical Imaging Analytics
+            </p>
         </div>
-
-        <!-- Botón para mostrar/ocultar curvas -->
-        <div class="bg-gray-50 p-4 rounded-lg flex items-center justify-center">
-          <button id="toggleCurvesBtn" class="bg-green-500 text-white px-4 py-2 rounded-lg">
-            Mostrar Curvas
-          </button>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Tu script principal -->
-  <script src="/static/js/main.js"></script>
+    <script src="/static/js/main.js"></script>
 </body>
 </html>

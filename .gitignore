@@ -4,6 +4,8 @@
 .vscode
 venv/
 env/
+web/static/uploads/
+web/.temp.jpeg
 __pycache__/
 #Python
 *.pyc
