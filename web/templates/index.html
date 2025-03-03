@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OCT App Web</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">OCT Image Analysis</h1>
+      
+      <!-- Sección de carga -->
+      <div class="mb-8">
+        <input type="file" id="imageInput" class="hidden" accept="image/*"/>
+        <label
+          for="imageInput"
+          class="bg-blue-500 text-white px-6 py-2 rounded-lg cursor-pointer hover:bg-blue-600 transition-colors"
+        >
+          Upload OCT Image
+        </label>
+      </div>
+
+      <!-- Visualización de la imagen con canvas superpuesto -->
+      <div class="relative border-2 border-dashed border-gray-200 rounded-lg p-4 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Original Image with Overlay</h2>
+        <img id="originalImage" class="w-full h-96 object-contain" src=""/>
+        <!-- Canvas superpuesto -->
+        <canvas id="overlayCanvas" class="absolute top-0 left-0 z-10"></canvas>
+      </div>
+
+      <!-- Controles -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        
+        <!-- Tipo de distancia -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">Distance Type</h3>
+          <div class="space-y-2">
+            <label class="flex items-center space-x-2">
+              <input type="radio" name="distanceType" value="up" checked class="form-radio"/>
+              <span>Up Point Distance</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="radio" name="distanceType" value="euclidean" class="form-radio"/>
+              <span>Euclidean Distance</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Slider -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <div class="flex justify-between mb-2">
+            <span>X Position:</span>
+            <span id="xValue">0</span>
+          </div>
+          <input
+            type="range"
+            id="xSlider"
+            min="0"
+            max="1000"
+            value="0"
+            class="w-full cursor-pointer"
+          />
+        </div>
+
+        <!-- Checkbox Mostrar todos los puntos -->
+        <div class="bg-gray-50 p-4 rounded-lg flex items-center">
+          <input type="checkbox" id="showAll" class="form-checkbox mr-2"/>
+          <label for="showAll">Mostrar todos</label>
+        </div>
+
+        <!-- Botón para mostrar/ocultar curvas -->
+        <div class="bg-gray-50 p-4 rounded-lg flex items-center justify-center">
+          <button id="toggleCurvesBtn" class="bg-green-500 text-white px-4 py-2 rounded-lg">
+            Mostrar Curvas
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tu script principal -->
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
