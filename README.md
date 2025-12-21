@@ -55,21 +55,20 @@ An agile SCRUM methodology is used with iterative development, where each iterat
 
 ## ⚙️ Installation
 
-### Linux
-```bash
-# Update system
-sudo apt update && sudo apt upgrade
+### Using uv (Recommended)
 
-# Install Python and pip
-sudo apt-get install python3 python3-pip
+This project uses `uv` for dependency management.
 
-# Install dependencies
-pip install numpy opencv-python pyqt5
-```
+1. **Sync dependencies**:
+   ```bash
+   uv sync
+   ```
 
 ## 🚀 Running the Application
+
+### Web Application (Flask)
 ```bash
-python3 octApp.py
+uv run python web/app.py
 ```
 
 ## 📄 License
