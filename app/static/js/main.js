@@ -69,6 +69,16 @@ document.addEventListener('DOMContentLoaded', () => {
   let showCurves = true; // Default to true as requested
   let isImageLoaded = false;
 
+  // Stats Globals (Export Needs Access)
+  let meanVal = 0;
+  let stdVal = 0;
+  let minD = 0;
+  let maxD = 0;
+  let centralMean = 0;
+  let periphMean = 0;
+  let symIdx = 0;
+  let rad = 0;
+
   // --- UI Helpers ---
 
   function setLoading(isLoading) {
@@ -125,39 +135,35 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateStats() {
     const dists = getCurrentDists();
     if (dists && dists.length > 0) {
-      const min = Math.min(...dists);
-      const max = Math.max(...dists);
+      // Calculate Min/Max
+      minD = Math.min(...dists);
+      maxD = Math.max(...dists);
 
       // Calculate Mean
       const sum = dists.reduce((a, b) => a + b, 0);
-      const mean = sum / dists.length;
+      meanVal = sum / dists.length;
 
       // Calculate Std Dev
-      const squareDiffs = dists.map(value => Math.pow(value - mean, 2));
+      const squareDiffs = dists.map(value => Math.pow(value - meanVal, 2));
       const avgSquareDiff = squareDiffs.reduce((a, b) => a + b, 0) / squareDiffs.length;
-      const stdDev = Math.sqrt(avgSquareDiff);
+      stdVal = Math.sqrt(avgSquareDiff);
 
       // Calculate Central vs Peripheral
-      // Central: middle 33% (approx width index from 1/3 to 2/3)
-      // We need to know indices. getCurrentDists returns array matching X indices 0..width.
-
       const w = dists.length;
       const oneThird = Math.floor(w / 3);
       const twoThirds = Math.floor(2 * w / 3);
 
       const centralDists = dists.slice(oneThird, twoThirds);
-      // Peripheral: 0..oneThird AND twoThirds..w
       const peripheralDists = [...dists.slice(0, oneThird), ...dists.slice(twoThirds)];
 
       const getMean = (arr) => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
 
-      const centralMean = getMean(centralDists);
-      const peripheralMean = getMean(peripheralDists);
+      centralMean = getMean(centralDists);
+      periphMean = getMean(peripheralDists);
 
       // --- Advanced Metrics Calculation ---
 
       // 1. Symmetry Index (SI)
-      // Formula: |Mean(Half1) - Mean(Half2)| / GlobalMean
       const halfIdx = Math.floor(w / 2);
       const leftHalf = dists.slice(0, halfIdx);
       const rightHalf = dists.slice(halfIdx);
@@ -165,35 +171,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const leftMean = getMean(leftHalf);
       const rightMean = getMean(rightHalf);
 
-      // Protect against zero division
-      const symmetryIndex = mean > 0 ? (Math.abs(leftMean - rightMean) / mean * 100) : 0;
+      symIdx = meanVal > 0 ? (Math.abs(leftMean - rightMean) / meanVal * 100) : 0;
 
       // 2. Curvature Estimation (Approx Anterior Radius)
-      // Use Least Squares Circle Fit on curveUpPoints
-      // Note: curveUpPoints are [x,y] in original image pixel space.
-      // To get 'mm', we need pixel-to-microns scale.
-      // We can infer scale from (meanDistance microns / meanDistance pixels).
-      // NOT PERFECT, but an estimation.
-
-      // Calculate mean distance in PIXELS first
-      // We have 'dists' in microns (already converted by backend).
-      // Wait, 'dists' are the values returned by backend.
-      // If backend returns microns, we need the pixel distances to derive scale.
-      // But we don't have pixel distances readily available in a simple array here without re-calculating euclidean.
-      // Let's assume a standard corneal scan width of ~10mm (10000 microns) for the width of the image if full width.
-      // Or better: Let's just assume the backend 'dists' are accurate microns.
-      // If we have curveUpPoints in pixels, and we assume the image width corresponds to X mm.
-      // Standard OCT scan width is often 6mm to 9mm. Let's assume 9mm for wide field or 6mm.
-      // Without metadata, it's a guess. Let's use a heuristic:
-      // Avg normal central measured thickness is ~535 microns.
-      // We can compute average pixel thickness from curveUp vs curveDown y-diff at center.
-      // Then Scale = 535 / AvgPixelThickness.
-      // Then convert RadiusPixels to RadiusMicrons -> mm.
-
-      let estRadiusMm = 0;
+      rad = 0;
       if (curveUpPoints.length > 2) {
-        // Simple 3-point fit or standard algo?
-        // Let's use 3 points: 1/4, 1/2, 3/4 positions
         const pA = curveUpPoints[Math.floor(curveUpPoints.length * 0.25)];
         const pB = curveUpPoints[Math.floor(curveUpPoints.length * 0.5)];
         const pC = curveUpPoints[Math.floor(curveUpPoints.length * 0.75)];
@@ -201,42 +183,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pA && pB && pC) {
           const rPx = calculateCircleRadius(pA, pB, pC);
 
-          // Estimation of Scale (Microns per Pixel)
-          // Use the central thickness we computed (centralMean).
-          // We need central thickness in pixels.
-          // Approx: (curveDown y - curveUp y) at center.
+          // Estimation of Scale
           const centIdx = Math.floor(curveUpPoints.length / 2);
           const pUp = curveUpPoints[centIdx];
-          const pDown = curveDownPoints[centIdx]; // Assumes same length/alignment which is usually true for column-based data
+          const pDown = curveDownPoints[centIdx];
 
           if (pUp && pDown) {
             const thicknessPx = Math.sqrt(Math.pow(pUp[0] - pDown[0], 2) + Math.pow(pUp[1] - pDown[1], 2));
             const scale = centralMean / thicknessPx; // microns per pixel
 
             const rMicrons = rPx * scale;
-            estRadiusMm = rMicrons / 1000;
+            rad = rMicrons / 1000;
           }
         }
       }
 
       // --- DOM Updates ---
-
-      minDistanceEl.textContent = min.toFixed(0);
-      maxDistanceEl.textContent = max.toFixed(0);
-      meanDistanceEl.textContent = mean.toFixed(0);
-      stdDistanceEl.textContent = stdDev.toFixed(1);
+      minDistanceEl.textContent = minD.toFixed(0);
+      maxDistanceEl.textContent = maxD.toFixed(0);
+      meanDistanceEl.textContent = meanVal.toFixed(0);
+      stdDistanceEl.textContent = stdVal.toFixed(1);
 
       centralDistanceEl.textContent = centralMean.toFixed(0);
-      peripheralDistanceEl.textContent = peripheralMean.toFixed(0);
+      peripheralDistanceEl.textContent = periphMean.toFixed(0);
 
-      // Bars (Normalized to e.g. 1000 microns max)
       const maxBar = 1000;
       centralBar.style.width = Math.min(100, (centralMean / maxBar) * 100) + '%';
-      peripheralBar.style.width = Math.min(100, (peripheralMean / maxBar) * 100) + '%';
+      peripheralBar.style.width = Math.min(100, (periphMean / maxBar) * 100) + '%';
 
-      // Advanced
-      symmetryIndexEl.textContent = symmetryIndex.toFixed(1) + '%';
-      if (symmetryIndex < 5) {
+      symmetryIndexEl.textContent = symIdx.toFixed(1) + '%';
+      if (symIdx < 5) {
         symmetryTag.textContent = "Normal";
         symmetryTag.className = "px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700";
         symmetryTag.classList.remove('hidden');
@@ -246,17 +222,18 @@ document.addEventListener('DOMContentLoaded', () => {
         symmetryTag.classList.remove('hidden');
       }
 
-      antRadiusEl.innerHTML = (estRadiusMm > 0 && estRadiusMm < 100) ? `${estRadiusMm.toFixed(2)} <span class="text-sm font-normal text-slate-500">mm</span>` : '--';
-
-      antRadiusEl.innerHTML = (estRadiusMm > 0 && estRadiusMm < 100) ? `${estRadiusMm.toFixed(2)} <span class="text-sm font-normal text-slate-500">mm</span>` : '--';
+      antRadiusEl.innerHTML = (rad > 0 && rad < 100) ? `${rad.toFixed(2)} <span class="text-sm font-normal text-slate-500">mm</span>` : '--';
 
       // Render Graphs
-      // We render to all available canvases if they are visible or initialized
-      renderGraph(graphCanvas, dists, mean);
-      renderGraph(fullProfileCanvas, dists, mean, true); // With axes
-      renderGraph(modalGraphCanvas, dists, mean, true); // With axes
+      renderGraph(graphCanvas, dists, meanVal);
+      renderGraph(fullProfileCanvas, dists, meanVal, true);
+      renderGraph(modalGraphCanvas, dists, meanVal, true);
+
     } else {
-      // Zero state
+      // Reset Globals
+      minD = 0; maxD = 0; meanVal = 0; stdVal = 0;
+      centralMean = 0; periphMean = 0; symIdx = 0; rad = 0;
+
       minDistanceEl.textContent = "--";
       maxDistanceEl.textContent = "--";
       meanDistanceEl.textContent = "--";
@@ -265,10 +242,15 @@ document.addEventListener('DOMContentLoaded', () => {
       peripheralDistanceEl.textContent = "--";
       symmetryIndexEl.textContent = "--";
       antRadiusEl.textContent = "--";
+      symmetryTag.classList.add('hidden'); // Fix tag visibility on reset
 
       if (graphCanvas) {
         const gCtx = graphCanvas.getContext('2d');
         gCtx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+      }
+      if (fullProfileCanvas) {
+        const gCtx = fullProfileCanvas.getContext('2d');
+        gCtx.clearRect(0, 0, fullProfileCanvas.width, fullProfileCanvas.height);
       }
     }
   }
@@ -894,121 +876,103 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Add Legend Box (Top Left) - Expanded for Medical Report
-    const boxW = 400;
-    const boxH = 450; // Taller for more metrics
-    const boxPad = 20;
-    const boxX = 20;
-    const boxY = 20;
 
-    exCtx.save();
-    exCtx.resetTransform(); // Draw legend in screen space
+    // --- COMPACT LEGEND (Top Left) ---
+    // Make simpler and smaller
+    const pad = 20;
+    const boxW = 320;
+    const boxH = 340;
 
-    // Semi-transparent background
-    exCtx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    exCtx.strokeStyle = '#cbd5e1';
-    exCtx.lineWidth = 1;
-
-    // Shadow
-    exCtx.shadowColor = 'rgba(0,0,0,0.1)';
-    exCtx.shadowBlur = 10;
-
-    // Round Rect
-    const r = 12;
+    // Transparent Background
+    exCtx.fillStyle = 'rgba(255, 255, 255, 0.85)';
     exCtx.beginPath();
-    exCtx.roundRect(boxX, boxY, boxW, boxH, r);
+    exCtx.roundRect(pad, pad, boxW, boxH, 12);
     exCtx.fill();
+    // Border
+    exCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    exCtx.lineWidth = 1;
     exCtx.stroke();
-    exCtx.shadowColor = 'transparent';
 
     // Text Config
-    const startTy = boxY + 50;
-    let ty = startTy;
-    const leftPad = boxX + 30;
+    let ty = pad + 40;
+    const tx = pad + 20;
 
-    // Header
-    exCtx.fillStyle = '#1e293b';
-    exCtx.font = 'bold 28px sans-serif';
-    exCtx.fillText('OCT Analysis Report', leftPad, ty);
+    // Title
+    exCtx.textAlign = 'left';
+    exCtx.fillStyle = '#0f172a'; // Slate 900
+    exCtx.font = 'bold 22px sans-serif';
+    exCtx.fillText("OCT Analysis", tx, ty);
 
-    // Date
+    ty += 24;
+    exCtx.fillStyle = '#64748b'; // Slate 500
+    exCtx.font = '13px sans-serif';
+    exCtx.fillText(new Date().toLocaleString(), tx, ty);
+
     ty += 30;
-    exCtx.font = '14px sans-serif';
-    exCtx.fillStyle = '#94a3b8';
-    exCtx.fillText(new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(), leftPad, ty);
 
-    // Section: Global
-    ty += 40;
-    exCtx.font = 'bold 16px sans-serif';
-    exCtx.fillStyle = '#475569';
-    exCtx.fillText('GLOBAL METRICS', leftPad, ty);
+    // Helper
+    const drawSection = (title) => {
+      exCtx.fillStyle = '#94a3b8'; // Slate 400
+      exCtx.font = 'bold 10px sans-serif';
+      exCtx.fillText(title.toUpperCase(), tx, ty);
+      ty += 20;
+    };
 
-    ty += 25;
-    exCtx.font = '18px sans-serif';
-    exCtx.fillStyle = '#334155';
-    exCtx.fillText(`Min Thickness: ${minDistanceEl.textContent} μm`, leftPad, ty);
-    ty += 25;
-    exCtx.fillText(`Max Thickness: ${maxDistanceEl.textContent} μm`, leftPad, ty);
-    ty += 25;
-    exCtx.fillText(`Mean Thickness: ${meanDistanceEl.textContent} μm`, leftPad, ty);
-    ty += 25;
-    exCtx.fillText(`Std Deviation: ${stdDistanceEl.textContent} μm`, leftPad, ty);
+    const drawRow = (label, val) => {
+      exCtx.fillStyle = '#64748b'; // Label
+      exCtx.font = '14px sans-serif';
+      exCtx.fillText(label, tx, y = ty);
 
-    // Section: Zonal
-    ty += 40;
-    exCtx.font = 'bold 16px sans-serif';
-    exCtx.fillStyle = '#4f46e5';
-    exCtx.fillText('ZONAL ANALYSIS', leftPad, ty);
+      exCtx.fillStyle = '#334155'; // Value
+      exCtx.font = 'bold 14px sans-serif';
+      const valW = exCtx.measureText(val).width;
+      exCtx.fillText(val, tx + boxW - 40 - valW, ty); // Right align
+      ty += 22;
+    };
 
-    ty += 25;
-    exCtx.font = '18px sans-serif';
-    exCtx.fillStyle = '#334155';
-    exCtx.fillText(`Central (33%): ${centralDistanceEl.textContent} μm`, leftPad, ty);
-    ty += 25;
-    exCtx.fillText(`Peripheral: ${peripheralDistanceEl.textContent} μm`, leftPad, ty);
+    // Global Metrics
+    drawSection("Global Metrics");
+    drawRow("Min Thickness", `${Math.round(minD)} µm`);
+    drawRow("Max Thickness", `${Math.round(maxD)} µm`);
+    drawRow("Mean Thickness", `${meanVal.toFixed(1)} µm`);
+    drawRow("Std Deviation", `${stdVal ? stdVal.toFixed(1) : '--'} µm`);
 
-    // Section: Advanced
-    ty += 40;
-    exCtx.font = 'bold 16px sans-serif';
-    exCtx.fillStyle = '#059669'; // Green/Teal
-    exCtx.fillText('MORPHOLOGY', leftPad, ty);
+    ty += 15;
+    // Zonal
+    drawSection("Zonal Analysis");
+    drawRow("Central (33%)", `${centralMean ? centralMean.toFixed(0) : '--'} µm`);
+    drawRow("Peripheral", `${periphMean ? periphMean.toFixed(0) : '--'} µm`);
 
-    ty += 25;
-    exCtx.font = '18px sans-serif';
-    exCtx.fillStyle = '#334155';
-    exCtx.fillText(`Symmetry Index: ${symmetryIndexEl.textContent}`, leftPad, ty);
-    ty += 25;
-
-    // Strip HTML from radius
-    const radiusText = antRadiusEl.innerText || antRadiusEl.textContent;
-    exCtx.fillText(`Est. Radius: ${radiusText}`, leftPad, ty);
+    ty += 15;
+    // Morphology
+    drawSection("Morphology");
+    drawRow("Symmetry Index", `${symIdx ? symIdx.toFixed(1) : '--'}%`);
+    drawRow("Est. Radius", `${rad ? rad.toFixed(2) : '--'} mm`);
 
     exCtx.restore();
 
     // --- DRAW GRAPH AT BOTTOM ---
-    // We want the graph to span most of the bottom width
-    // Draw a semi-transparent panel at the bottom overlaying the image
-    const graphH = 150;
-    const graphPad = 40;
+    // --- BOTTOM GRAPH (Compact) ---
+    const graphH = 140;
+    const graphPad = 30;
     const graphW = exportCanvas.width - (graphPad * 2);
-    const graphY = exportCanvas.height - graphH - graphPad;
+    const graphY = exportCanvas.height - graphH - 30;
 
-    if (graphW > 100) { // Ensure enough space
+    if (graphW > 100) {
       exCtx.save();
-      exCtx.resetTransform(); // Screen space
+      exCtx.resetTransform();
 
       // Background Panel
-      exCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      exCtx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      exCtx.beginPath();
       exCtx.roundRect(graphPad, graphY, graphW, graphH, 12);
       exCtx.fill();
-      exCtx.strokeStyle = '#e2e8f0';
-      exCtx.stroke();
 
-      // Draw Graph inside this box
-      const gInnerX = graphPad + 20;
-      const gInnerY = graphY + 20;
-      const gInnerW = graphW - 40;
-      const gInnerH = graphH - 40;
+      // Draw Graph inside
+      const gInnerX = graphPad + 40;
+      const gInnerY = graphY + 30;
+      const gInnerW = graphW - 60;
+      const gInnerH = graphH - 50;
 
       // Data
       const dists = currentDists;

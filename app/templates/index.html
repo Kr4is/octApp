@@ -212,10 +212,12 @@
         <div class="h-[40%] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
             <!-- Tabs Header -->
             <div class="flex items-center border-b border-slate-100 px-6">
-                <button class="px-4 py-3 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600">Overview &
+                <button id="tabOverview"
+                    class="px-4 py-3 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600 transition-colors">Overview
+                    &
                     Metrics</button>
-                <button
-                    class="px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">Thickness
+                <button id="tabProfile"
+                    class="px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors border-b-2 border-transparent hover:border-slate-300">Thickness
                     Profile</button>
                 <div class="ml-auto py-2">
                     <button id="exportBtn"
@@ -230,7 +232,8 @@
             </div>
 
             <div class="flex-grow p-6 overflow-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Overview Content -->
+                <div id="contentOverview" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Stat Card 1: Thickness Stats -->
                     <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
                         <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Global Thickness
@@ -310,7 +313,7 @@
                     </div>
 
                     <!-- Stat Card 4: Graph Preview (Small) -->
-                    <div
+                    <div id="graphPreviewCard"
                         class="bg-white rounded-xl border border-slate-200 p-2 flex flex-col relative group cursor-pointer hover:border-indigo-300 transition-colors">
                         <canvas id="thicknessGraph" class="w-full h-full"></canvas>
                         <div
@@ -320,12 +323,44 @@
                                 Graph</span>
                         </div>
                     </div>
+                </div>
 
+                <!-- Detailed Profile Content (Hidden by default) -->
+                <div id="contentProfile" class="hidden h-full flex flex-col">
+                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 h-full">
+                        <canvas id="fullProfileCanvas" class="w-full h-full"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
 
     </main>
+
+    <!-- Graph Modal -->
+    <div id="graphModal"
+        class="hidden fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4 sm:p-6">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden relative">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <h3 class="text-lg font-bold text-slate-800">Detailed Thickness Profile</h3>
+                <button id="closeModalBtn"
+                    class="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-grow p-6 bg-slate-50">
+                <div class="bg-white rounded-xl border border-slate-200 h-full w-full p-4 shadow-sm">
+                    <canvas id="modalGraphCanvas" class="w-full h-full"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
