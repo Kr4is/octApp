@@ -17,13 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const xSlider = document.getElementById('xSlider');
   const xValue = document.getElementById('xValue');
   const maxLabel = document.getElementById('maxX');
-  const showAllCheckbox = document.getElementById('showAll');
   const toggleCurvesBtn = document.getElementById('toggleCurvesBtn');
   const distanceRadios = document.getElementsByName('distanceType');
 
   // Results
   const minDistanceEl = document.getElementById('minDistance');
   const maxDistanceEl = document.getElementById('maxDistance');
+  const meanDistanceEl = document.getElementById('meanDistance');
+  const stdDistanceEl = document.getElementById('stdDistance');
+  const currentDistanceEl = document.getElementById('currentDistance');
+  const exportBtn = document.getElementById('exportBtn');
 
   // Context
   const ctx = overlayCanvas.getContext('2d');
@@ -35,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let curveDownPoints = [];
   let originalWidth = 0;
   let originalHeight = 0;
-  let showCurves = false;
+  let showCurves = true; // Default to true as requested
   let isImageLoaded = false;
 
   // --- UI Helpers ---
@@ -94,11 +97,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dists && dists.length > 0) {
       const min = Math.min(...dists);
       const max = Math.max(...dists);
+
+      // Calculate Mean
+      const sum = dists.reduce((a, b) => a + b, 0);
+      const mean = sum / dists.length;
+
+      // Calculate Std Dev
+      const squareDiffs = dists.map(value => Math.pow(value - mean, 2));
+      const avgSquareDiff = squareDiffs.reduce((a, b) => a + b, 0) / squareDiffs.length;
+      const stdDev = Math.sqrt(avgSquareDiff);
+
       minDistanceEl.textContent = min.toFixed(2);
       maxDistanceEl.textContent = max.toFixed(2);
+      meanDistanceEl.textContent = mean.toFixed(2);
+      stdDistanceEl.textContent = stdDev.toFixed(2);
     } else {
       minDistanceEl.textContent = "--";
       maxDistanceEl.textContent = "--";
+      meanDistanceEl.textContent = "--";
+      stdDistanceEl.textContent = "--";
     }
   }
 
@@ -197,21 +214,43 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  function drawPolyline(pointsArray, color) {
+  function getColorForDistance(val, minD, maxD) {
+    if (maxD === minD) return `hsl(240, 100%, 50%)`;
+    // Normalize 0..1
+    const t = (val - minD) / (maxD - minD);
+    // Map to Hue: 240 (Blue) -> 0 (Red)
+    const hue = 240 * (1 - t);
+    return `hsl(${hue}, 100%, 50%)`;
+  }
+
+  function drawColoredPolyline(pointsArray, distsArray, minD, maxD) {
     if (!pointsArray || pointsArray.length === 0) return;
 
-    ctx.beginPath();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2 / getScaleFactors().scaleX; // Mantener grosor visual constante
+    // We draw segments. 
+    // Optimization: Draw lines segment by segment is slow in 2D Canvas if we do stroke() each time.
+    // However, for gradient effect, we typically need to change color.
+    // A better approach for many points is creating a gradient, but that matches spatial, not value.
+    // Since value maps to color, and value changes per pixel, we can draw line segments.
+
+    const sf = getScaleFactors();
+    ctx.lineWidth = 3 / sf.scaleX; // Thicker lines
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
 
-    for (let i = 0; i < pointsArray.length; i++) {
-      const [px, py] = pointsArray[i];
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+    for (let i = 0; i < pointsArray.length - 1; i++) {
+      const p1 = pointsArray[i];
+      const p2 = pointsArray[i + 1];
+
+      // Use the distance of i to color segment i -> i+1
+      const dist = distsArray[i] || 0;
+      const color = getColorForDistance(dist, minD, maxD);
+
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.moveTo(p1[0], p1[1]);
+      ctx.lineTo(p2[0], p2[1]);
+      ctx.stroke();
     }
-    ctx.stroke();
   }
 
   function normalizePoint(point) {
@@ -226,78 +265,38 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.resetTransform();
     ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-    getScaleFactors(); // Apply transform
+    const sf = getScaleFactors(); // Apply transform is inside, but we need the object for un-transform logic if needed
+    // Actually getScaleFactors DOES apply ctx transform.
 
     const xSelected = parseInt(xSlider.value, 10);
-    const showAll = showAllCheckbox.checked;
     const currentPoints = getCurrentPoints();
     const currentDists = getCurrentDists();
 
+    // Calculate Min/Max for global coloring
+    let minD = 0, maxD = 100;
+    if (currentDists && currentDists.length > 0) {
+      minD = Math.min(...currentDists);
+      maxD = Math.max(...currentDists);
+    }
+
     // Draw Curves
     if (showCurves) {
-      drawPolyline(curveUpPoints, '#22c55e'); // Green-500
-      drawPolyline(curveDownPoints, '#ef4444'); // Red-500
+      // Curve Up (uses current distances for coloring to match the heatmap concept)
+      drawColoredPolyline(curveUpPoints, currentDists, minD, maxD);
+      // Curve Down
+      drawColoredPolyline(curveDownPoints, currentDists, minD, maxD);
     }
 
-    // Draw Points
-    // Selected Point Style
-    ctx.lineWidth = 2;
+    // Draw Selected Point / Measurement Line
+    if (currentPoints[xSelected]) {
+      const distVal = currentDists[xSelected];
+      const color = getColorForDistance(distVal, minD, maxD);
 
-    const dists = getCurrentDists();
-    let minD = 0, maxD = 100;
+      // Update Interface Value
+      currentDistanceEl.textContent = distVal ? distVal.toFixed(2) : '--';
 
-    if (dists && dists.length > 0) {
-      minD = Math.min(...dists);
-      maxD = Math.max(...dists);
-    }
-
-    function getColorForDistance(val) {
-      if (maxD === minD) return `hsl(240, 100%, 50%)`;
-      // Normalize 0..1
-      const t = (val - minD) / (maxD - minD);
-      // Map to Hue: 240 (Blue) -> 0 (Red)
-      const hue = 240 * (1 - t);
-      return `hsl(${hue}, 100%, 50%)`;
-    }
-
-    if (showAll) {
-      for (let i = 0; i < currentPoints.length; i++) {
-        if (!currentPoints[i]) continue;
-        let p1, p2;
-        if (Array.isArray(currentPoints[i])) {
-          p1 = normalizePoint(currentPoints[i][0]);
-          p2 = normalizePoint(currentPoints[i][1]);
-        }
-        if (!p1 || !p2) continue;
-
-        const distVal = dists[i] !== undefined ? dists[i] : 0;
-        const color = getColorForDistance(distVal);
-
-        ctx.beginPath();
-        ctx.fillStyle = color;
-        ctx.strokeStyle = color; // For lines if we drew them
-
-        ctx.arc(p1[0], p1[1], 1.5, 0, Math.PI * 2);
-        ctx.arc(p2[0], p2[1], 1.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Highlight selected even in show all
-      if (currentPoints[xSelected]) {
-        let p1 = normalizePoint(currentPoints[xSelected][0]);
-        let p2 = normalizePoint(currentPoints[xSelected][1]);
-
-        ctx.beginPath();
-        ctx.strokeStyle = '#4f46e5'; // Indigo-600
-        ctx.lineWidth = 3;
-        ctx.moveTo(p1[0], p1[1]);
-        ctx.lineTo(p2[0], p2[1]);
-        ctx.stroke();
-      }
-
-    } else if (currentPoints[xSelected]) {
-      ctx.strokeStyle = '#4f46e5'; // Indigo-600
-      ctx.fillStyle = '#4f46e5';
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
 
       let p1, p2;
       const ptData = currentPoints[xSelected];
@@ -308,41 +307,49 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (p1 && p2) {
-        // Draw large selected points
-        ctx.beginPath();
-        ctx.arc(p1[0], p1[1], 5, 0, Math.PI * 2);
-        ctx.arc(p2[0], p2[1], 5, 0, Math.PI * 2);
-        ctx.fill();
-
         // Draw connection line
         ctx.beginPath();
+        // Make it thicker as requested to "match heatmap size" or just be visible
+        ctx.lineWidth = 3 / sf.scaleX;
         ctx.moveTo(p1[0], p1[1]);
         ctx.lineTo(p2[0], p2[1]);
         ctx.stroke();
 
+        // Draw large selected points
+        // Use fixed size in screen pixels -> divide radius by scale
+        const r = 4 / sf.scaleX;
+        ctx.beginPath();
+        ctx.arc(p1[0], p1[1], r, 0, Math.PI * 2);
+        ctx.arc(p2[0], p2[1], r, 0, Math.PI * 2);
+        ctx.fill();
+
         // Draw label
-        if (currentDists[xSelected] !== undefined) {
+        if (distVal !== undefined) {
           ctx.save();
           ctx.resetTransform(); // Draw text in screen space for sharpness
-          const sf = getScaleFactors();
-          // ... (existing label logic)
-          // Re-implementing simplified label logic for context
 
-          // Restore label drawing:
           const midX_world = (p1[0] + p2[0]) / 2;
-          const midY_world = (p1[1] + p2[1]) / 2;
+          // Position below the bottom point (usually p2 is bottom, but let's check max y)
+          const lowerY = Math.max(p1[1], p2[1]);
 
           const screenX = midX_world * sf.scaleX + sf.offsetX;
-          const screenY = midY_world * sf.scaleY + sf.offsetY;
+          const screenY = lowerY * sf.scaleY + sf.offsetY;
 
-          ctx.font = 'bold 16px Outfit, sans-serif';
-          ctx.fillStyle = '#1e1b4b';
+          // Text Style
+          ctx.font = 'bold 24px Outfit, sans-serif'; // Larger font
+          ctx.fillStyle = color; // Colored text matching line
           ctx.textAlign = 'center';
-          ctx.fillText(currentDists[xSelected].toFixed(2), screenX, screenY - 15);
+          ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+          ctx.shadowBlur = 4;
+
+          // Draw below
+          ctx.fillText(distVal.toFixed(2), screenX, screenY + 40);
 
           ctx.restore();
         }
       }
+    } else {
+      currentDistanceEl.textContent = '--';
     }
   }
 
@@ -451,10 +458,129 @@ document.addEventListener('DOMContentLoaded', () => {
 
   xSlider.addEventListener('input', () => {
     xValue.textContent = xSlider.value;
-    drawOverlay();
+    // Debounce/Throttle could be added if performance is an issue
+    requestAnimationFrame(drawOverlay);
   });
 
-  showAllCheckbox.addEventListener('change', drawOverlay);
+  exportBtn.addEventListener('click', () => {
+    if (!isImageLoaded) return;
+
+    // Create a temporary canvas with correct dimensions
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = originalImage.naturalWidth;
+    exportCanvas.height = originalImage.naturalHeight;
+    const exCtx = exportCanvas.getContext('2d');
+
+    // Draw Original Image
+    exCtx.drawImage(originalImage, 0, 0);
+
+    // Draw Overlay
+    // We need to scale our drawing context to 1:1 with natural pixels.
+    // The current drawOverlay logic relies on getScaleFactors which maps Backend -> Screen.
+    // Backend (originalWidth) -> NaturalWidth might usually be 1:1 but we handled it separately.
+
+    // Logic:
+    // P_natural = P_backend * (naturalW / originalWidth)
+
+    const scaleToNaturalX = originalImage.naturalWidth / originalWidth;
+    const scaleToNaturalY = originalImage.naturalHeight / originalHeight;
+
+    exCtx.scale(scaleToNaturalX, scaleToNaturalY);
+
+    // Reuse logic? 
+    // We can duplicate the drawing logic slightly modified for export or refactor `drawOverlay` to accept a context.
+    // For simplicity/speed, let's replicate the drawing logic here adapted for the export context.
+
+    const xSelected = parseInt(xSlider.value, 10);
+    const currentPoints = getCurrentPoints();
+    const currentDists = getCurrentDists();
+
+    let minD = 0, maxD = 100;
+    if (currentDists.length > 0) {
+      minD = Math.min(...currentDists);
+      maxD = Math.max(...currentDists);
+    }
+
+    // Helper for export coloring
+    function getExpColor(val) {
+      if (maxD === minD) return `hsl(240, 100%, 50%)`;
+      const t = (val - minD) / (maxD - minD);
+      const hue = 240 * (1 - t);
+      return `hsl(${hue}, 100%, 50%)`;
+    }
+
+    // Draw colored curves in export
+    if (showCurves) {
+      exCtx.lineWidth = 3;
+      exCtx.lineJoin = 'round';
+      exCtx.lineCap = 'round';
+
+      const drawExpPoly = (pts) => {
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p1 = pts[i];
+          const p2 = pts[i + 1];
+          const dist = currentDists[i] || 0;
+          exCtx.beginPath();
+          exCtx.strokeStyle = getExpColor(dist);
+          exCtx.moveTo(p1[0], p1[1]);
+          exCtx.lineTo(p2[0], p2[1]);
+          exCtx.stroke();
+        }
+      };
+
+      drawExpPoly(curveUpPoints);
+      drawExpPoly(curveDownPoints);
+    }
+
+    // Draw Selection in export
+    if (currentPoints[xSelected]) {
+      const ptData = currentPoints[xSelected];
+      let p1, p2;
+      if (Array.isArray(ptData)) {
+        p1 = normalizePoint(ptData[0]);
+        p2 = normalizePoint(ptData[1]);
+      }
+
+      if (p1 && p2) {
+        const distVal = currentDists[xSelected];
+        const color = getExpColor(distVal);
+
+        exCtx.strokeStyle = color;
+        exCtx.fillStyle = color;
+        exCtx.lineWidth = 4;
+
+        exCtx.beginPath();
+        exCtx.moveTo(p1[0], p1[1]);
+        exCtx.lineTo(p2[0], p2[1]);
+        exCtx.stroke();
+
+        // Points
+        exCtx.beginPath();
+        exCtx.arc(p1[0], p1[1], 5, 0, Math.PI * 2);
+        exCtx.arc(p2[0], p2[1], 5, 0, Math.PI * 2);
+        exCtx.fill();
+
+        // Text
+        exCtx.save();
+        //   exCtx.resetTransform(); // No, we want it in the scene
+        // Draw Text slightly larger for high res export
+
+        const midX = (p1[0] + p2[0]) / 2;
+        const lowerY = Math.max(p1[1], p2[1]);
+
+        exCtx.font = 'bold 30px sans-serif';
+        exCtx.textAlign = 'center';
+        exCtx.fillText(distVal.toFixed(2), midX, lowerY + 50);
+        exCtx.restore();
+      }
+    }
+
+    // Download
+    const link = document.createElement('a');
+    link.download = 'oct-analysis-result.png';
+    link.href = exportCanvas.toDataURL('image/png');
+    link.click();
+  });
 
   toggleCurvesBtn.addEventListener('click', () => {
     showCurves = !showCurves;
