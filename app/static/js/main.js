@@ -26,13 +26,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const distanceRadios = document.getElementsByName('distanceType');
 
   // Results
+  // Results & Dashboard
   const minDistanceEl = document.getElementById('minDistance');
   const maxDistanceEl = document.getElementById('maxDistance');
   const meanDistanceEl = document.getElementById('meanDistance');
   const stdDistanceEl = document.getElementById('stdDistance');
   const centralDistanceEl = document.getElementById('centralDistance');
   const peripheralDistanceEl = document.getElementById('peripheralDistance');
+
+  // New Advanced Metrics
+  const symmetryIndexEl = document.getElementById('symmetryIndex');
+  const symmetryTag = document.getElementById('symmetryTag');
+  const antRadiusEl = document.getElementById('antRadius');
+  const centralBar = document.getElementById('centralBar');
+  const peripheralBar = document.getElementById('peripheralBar');
+
+  // Graph
+  const graphCanvas = document.getElementById('thicknessGraph');
+  const fullProfileCanvas = document.getElementById('fullProfileCanvas');
+  const modalGraphCanvas = document.getElementById('modalGraphCanvas');
+  const graphPreviewCard = document.getElementById('graphPreviewCard');
   const exportBtn = document.getElementById('exportBtn');
+
+  // Tabs & Modal
+  const tabOverview = document.getElementById('tabOverview');
+  const tabProfile = document.getElementById('tabProfile');
+  const contentOverview = document.getElementById('contentOverview');
+  const contentProfile = document.getElementById('contentProfile');
+  const graphModal = document.getElementById('graphModal');
+  const closeModalBtn = document.getElementById('closeModalBtn');
 
   // Context
   const ctx = overlayCanvas.getContext('2d');
@@ -132,20 +154,247 @@ document.addEventListener('DOMContentLoaded', () => {
       const centralMean = getMean(centralDists);
       const peripheralMean = getMean(peripheralDists);
 
-      minDistanceEl.textContent = min.toFixed(2);
-      maxDistanceEl.textContent = max.toFixed(2);
-      meanDistanceEl.textContent = mean.toFixed(2);
-      stdDistanceEl.textContent = stdDev.toFixed(2);
+      // --- Advanced Metrics Calculation ---
 
-      centralDistanceEl.textContent = centralMean.toFixed(2);
-      peripheralDistanceEl.textContent = peripheralMean.toFixed(2);
+      // 1. Symmetry Index (SI)
+      // Formula: |Mean(Half1) - Mean(Half2)| / GlobalMean
+      const halfIdx = Math.floor(w / 2);
+      const leftHalf = dists.slice(0, halfIdx);
+      const rightHalf = dists.slice(halfIdx);
+
+      const leftMean = getMean(leftHalf);
+      const rightMean = getMean(rightHalf);
+
+      // Protect against zero division
+      const symmetryIndex = mean > 0 ? (Math.abs(leftMean - rightMean) / mean * 100) : 0;
+
+      // 2. Curvature Estimation (Approx Anterior Radius)
+      // Use Least Squares Circle Fit on curveUpPoints
+      // Note: curveUpPoints are [x,y] in original image pixel space.
+      // To get 'mm', we need pixel-to-microns scale.
+      // We can infer scale from (meanDistance microns / meanDistance pixels).
+      // NOT PERFECT, but an estimation.
+
+      // Calculate mean distance in PIXELS first
+      // We have 'dists' in microns (already converted by backend).
+      // Wait, 'dists' are the values returned by backend.
+      // If backend returns microns, we need the pixel distances to derive scale.
+      // But we don't have pixel distances readily available in a simple array here without re-calculating euclidean.
+      // Let's assume a standard corneal scan width of ~10mm (10000 microns) for the width of the image if full width.
+      // Or better: Let's just assume the backend 'dists' are accurate microns.
+      // If we have curveUpPoints in pixels, and we assume the image width corresponds to X mm.
+      // Standard OCT scan width is often 6mm to 9mm. Let's assume 9mm for wide field or 6mm.
+      // Without metadata, it's a guess. Let's use a heuristic:
+      // Avg normal central measured thickness is ~535 microns.
+      // We can compute average pixel thickness from curveUp vs curveDown y-diff at center.
+      // Then Scale = 535 / AvgPixelThickness.
+      // Then convert RadiusPixels to RadiusMicrons -> mm.
+
+      let estRadiusMm = 0;
+      if (curveUpPoints.length > 2) {
+        // Simple 3-point fit or standard algo?
+        // Let's use 3 points: 1/4, 1/2, 3/4 positions
+        const pA = curveUpPoints[Math.floor(curveUpPoints.length * 0.25)];
+        const pB = curveUpPoints[Math.floor(curveUpPoints.length * 0.5)];
+        const pC = curveUpPoints[Math.floor(curveUpPoints.length * 0.75)];
+
+        if (pA && pB && pC) {
+          const rPx = calculateCircleRadius(pA, pB, pC);
+
+          // Estimation of Scale (Microns per Pixel)
+          // Use the central thickness we computed (centralMean).
+          // We need central thickness in pixels.
+          // Approx: (curveDown y - curveUp y) at center.
+          const centIdx = Math.floor(curveUpPoints.length / 2);
+          const pUp = curveUpPoints[centIdx];
+          const pDown = curveDownPoints[centIdx]; // Assumes same length/alignment which is usually true for column-based data
+
+          if (pUp && pDown) {
+            const thicknessPx = Math.sqrt(Math.pow(pUp[0] - pDown[0], 2) + Math.pow(pUp[1] - pDown[1], 2));
+            const scale = centralMean / thicknessPx; // microns per pixel
+
+            const rMicrons = rPx * scale;
+            estRadiusMm = rMicrons / 1000;
+          }
+        }
+      }
+
+      // --- DOM Updates ---
+
+      minDistanceEl.textContent = min.toFixed(0);
+      maxDistanceEl.textContent = max.toFixed(0);
+      meanDistanceEl.textContent = mean.toFixed(0);
+      stdDistanceEl.textContent = stdDev.toFixed(1);
+
+      centralDistanceEl.textContent = centralMean.toFixed(0);
+      peripheralDistanceEl.textContent = peripheralMean.toFixed(0);
+
+      // Bars (Normalized to e.g. 1000 microns max)
+      const maxBar = 1000;
+      centralBar.style.width = Math.min(100, (centralMean / maxBar) * 100) + '%';
+      peripheralBar.style.width = Math.min(100, (peripheralMean / maxBar) * 100) + '%';
+
+      // Advanced
+      symmetryIndexEl.textContent = symmetryIndex.toFixed(1) + '%';
+      if (symmetryIndex < 5) {
+        symmetryTag.textContent = "Normal";
+        symmetryTag.className = "px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700";
+        symmetryTag.classList.remove('hidden');
+      } else {
+        symmetryTag.textContent = "High Asymmetry";
+        symmetryTag.className = "px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700";
+        symmetryTag.classList.remove('hidden');
+      }
+
+      antRadiusEl.innerHTML = (estRadiusMm > 0 && estRadiusMm < 100) ? `${estRadiusMm.toFixed(2)} <span class="text-sm font-normal text-slate-500">mm</span>` : '--';
+
+      antRadiusEl.innerHTML = (estRadiusMm > 0 && estRadiusMm < 100) ? `${estRadiusMm.toFixed(2)} <span class="text-sm font-normal text-slate-500">mm</span>` : '--';
+
+      // Render Graphs
+      // We render to all available canvases if they are visible or initialized
+      renderGraph(graphCanvas, dists, mean);
+      renderGraph(fullProfileCanvas, dists, mean, true); // With axes
+      renderGraph(modalGraphCanvas, dists, mean, true); // With axes
     } else {
+      // Zero state
       minDistanceEl.textContent = "--";
       maxDistanceEl.textContent = "--";
       meanDistanceEl.textContent = "--";
       stdDistanceEl.textContent = "--";
       centralDistanceEl.textContent = "--";
       peripheralDistanceEl.textContent = "--";
+      symmetryIndexEl.textContent = "--";
+      antRadiusEl.textContent = "--";
+
+      if (graphCanvas) {
+        const gCtx = graphCanvas.getContext('2d');
+        gCtx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+      }
+    }
+  }
+
+  // Helper: 3-Point Circle Radius
+  function calculateCircleRadius(A, B, C) {
+    const x1 = A[0], y1 = A[1];
+    const x2 = B[0], y2 = B[1];
+    const x3 = C[0], y3 = C[1];
+
+    const D = 2 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2));
+    const Ux = ((x1 * x1 + y1 * y1) * (y2 - y3) + (x2 * x2 + y2 * y2) * (y3 - y1) + (x3 * x3 + y3 * y3) * (y1 - y2)) / D;
+    const Uy = ((x1 * x1 + y1 * y1) * (x3 - x2) + (x2 * x2 + y2 * y2) * (x1 - x3) + (x3 * x3 + y3 * y3) * (x2 - x1)) / D;
+
+    const r = Math.sqrt(Math.pow(x1 - Ux, 2) + Math.pow(y1 - Uy, 2));
+    return r;
+  }
+
+  // Helper: Generic Graph Renderer
+  function renderGraph(canvasEl, data, meanVal, showAxes = false) {
+    if (!canvasEl) return;
+
+    // Resize canvas to parent
+    const parent = canvasEl.parentElement;
+    if (parent.clientWidth === 0 || parent.clientHeight === 0) return; // Hidden
+
+    canvasEl.width = parent.clientWidth;
+    canvasEl.height = parent.clientHeight;
+
+    const w = canvasEl.width;
+    const h = canvasEl.height;
+    const gCtx = canvasEl.getContext('2d');
+
+    gCtx.clearRect(0, 0, w, h);
+
+    // Padding for axes
+    const padLeft = showAxes ? 40 : 0;
+    const padBottom = showAxes ? 20 : 0;
+
+    // Effective drawing area
+    const drawW = w - padLeft;
+    const drawH = h - padBottom;
+
+    // Scale Logic
+    const minD = Math.min(...data);
+    const maxD = Math.max(...data);
+    const range = maxD - minD || 1;
+    const padY = range * 0.2;
+
+    const yMin = Math.max(0, minD - padY);
+    const yMax = maxD + padY;
+
+    // Mapping Functions
+    const mapX = (i) => padLeft + (i / (data.length - 1)) * drawW;
+    const mapY = (val) => (h - padBottom) - ((val - yMin) / (yMax - yMin)) * drawH;
+
+    // AXES & LABELS
+    if (showAxes) {
+      gCtx.fillStyle = '#64748b';
+      gCtx.font = '10px sans-serif';
+      gCtx.textAlign = 'right';
+
+      // Y-Axis Labels (Min, Mean, Max)
+      gCtx.fillText(Math.round(maxD), padLeft - 5, mapY(maxD) + 3);
+      gCtx.fillText(Math.round(minD), padLeft - 5, mapY(minD) + 3);
+
+      // X-Axis Labels (Start/End)
+      gCtx.textAlign = 'center';
+      gCtx.fillText("0", padLeft, h - 5);
+      gCtx.fillText(data.length, w - 10, h - 5);
+
+      // Axis Lines
+      gCtx.strokeStyle = '#e2e8f0';
+      gCtx.lineWidth = 1;
+      gCtx.beginPath();
+      gCtx.moveTo(padLeft, 0); gCtx.lineTo(padLeft, h - padBottom); // Y
+      gCtx.moveTo(padLeft, h - padBottom); gCtx.lineTo(w, h - padBottom); // X
+      gCtx.stroke();
+    }
+
+    // Draw Gradient Fill
+    gCtx.beginPath();
+    gCtx.moveTo(padLeft, h - padBottom);
+    for (let i = 0; i < data.length; i++) {
+      gCtx.lineTo(mapX(i), mapY(data[i]));
+    }
+    gCtx.lineTo(w, h - padBottom);
+    gCtx.closePath();
+
+    const grad = gCtx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
+    grad.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+    gCtx.fillStyle = grad;
+    gCtx.fill();
+
+    // Draw Line
+    gCtx.beginPath();
+    gCtx.strokeStyle = '#4f46e5';
+    gCtx.lineWidth = 2;
+    for (let i = 0; i < data.length; i++) {
+      if (i === 0) gCtx.moveTo(mapX(i), mapY(data[i]));
+      else gCtx.lineTo(mapX(i), mapY(data[i]));
+    }
+    gCtx.stroke();
+
+    // Draw Mean Line
+    const yMean = mapY(meanVal);
+    gCtx.beginPath();
+    gCtx.strokeStyle = '#94a3b8';
+    gCtx.setLineDash([4, 4]);
+    gCtx.moveTo(padLeft, yMean);
+    gCtx.lineTo(w, yMean);
+    gCtx.stroke();
+    gCtx.setLineDash([]);
+
+    // Highlight Selected Position
+    const xSelected = parseInt(xSlider.value, 10);
+    const xPos = mapX(xSelected);
+    // Clip to drawing area
+    if (xPos >= padLeft && xPos <= w) {
+      gCtx.beginPath();
+      gCtx.strokeStyle = '#ef4444';
+      gCtx.lineWidth = 1;
+      gCtx.moveTo(xPos, 0);
+      gCtx.lineTo(xPos, h - padBottom);
+      gCtx.stroke();
     }
   }
 
@@ -406,61 +655,74 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Data Loading ---
 
   function loadData(data) {
-    if (data.error) {
-      alert(data.error);
-      setLoading(false);
-      return;
-    }
+    try {
+      if (data.error) {
+        alert(data.error);
+        setLoading(false);
+        return;
+      }
 
-    originalWidth = data.width;
-    originalHeight = data.height;
-    curveUpPoints = data.curve_up || [];
-    curveDownPoints = data.curve_down || [];
+      originalWidth = data.width;
+      originalHeight = data.height;
+      curveUpPoints = data.curve_up || [];
+      curveDownPoints = data.curve_down || [];
 
-    imgResLabel.textContent = `${originalWidth} x ${originalHeight}`;
+      imgResLabel.textContent = `${originalWidth} x ${originalHeight}`;
 
-    allPoints = {};
-    allDists = {};
+      allPoints = {};
+      allDists = {};
 
-    if (data.points_by_type && data.dists_by_type) {
-      allPoints = data.points_by_type;
-      allDists = data.dists_by_type;
-    } else {
-      // Fallback for flat structure
-      allPoints.up = data.points || [];
-      allPoints.euclidean = data.points || [];
-      allDists.up = data.dists || [];
-      allDists.euclidean = data.dists || [];
-    }
+      if (data.points_by_type && data.dists_by_type) {
+        allPoints = data.points_by_type;
+        allDists = data.dists_by_type;
+      } else {
+        // Fallback for flat structure
+        allPoints.up = data.points || [];
+        allPoints.euclidean = data.points || [];
+        allDists.up = data.dists || [];
+        allDists.euclidean = data.dists || [];
+      }
 
-    // Config slider
-    xSlider.max = originalWidth - 1;
-    xSlider.value = Math.floor(originalWidth / 2); // Start in middle
-    xValue.textContent = xSlider.value;
-    maxLabel.textContent = originalWidth;
+      // Config slider
+      if (xSlider) {
+        xSlider.max = originalWidth - 1;
+        xSlider.value = Math.floor(originalWidth / 2); // Start in middle
+        if (xValue) xValue.textContent = xSlider.value;
+        if (maxLabel) maxLabel.textContent = originalWidth;
+      }
 
-    // Attach onload BEFORE setting src to avoid caching race conditions
-    originalImage.onload = () => {
-      setLoading(false);
-      showImage();
+      // Attach onload BEFORE setting src to avoid caching race conditions
+      originalImage.onload = () => {
+        setLoading(false);
+        showImage();
 
-      // Use rAF to wait for layout to settle
-      requestAnimationFrame(() => {
+        // Use rAF to wait for layout to settle
         requestAnimationFrame(() => {
-          setControlState(true);
-          resizeCanvas();
-          updateStats();
-          drawOverlay();
+          requestAnimationFrame(() => {
+            try {
+              setControlState(true);
+              resizeCanvas();
+              updateStats();
+              drawOverlay();
+            } catch (e) {
+              console.error("Rendering Error:", e);
+              // Don't alert here to avoid spam loop, but logging helps if console open
+            }
+          });
         });
-      });
-    };
+      };
 
-    // Set src AFTER attaching listener
-    // Add timestamp to force reload if needed (though local blob usually fine, static might cache)
-    if (data.original.startsWith('/static/')) {
-      originalImage.src = `${data.original}?t=${new Date().getTime()}`;
-    } else {
-      originalImage.src = data.original;
+      // Set src AFTER attaching listener
+      // Add timestamp to force reload if needed (though local blob usually fine, static might cache)
+      if (data.original.startsWith('/static/')) {
+        originalImage.src = `${data.original}?t=${new Date().getTime()}`;
+      } else {
+        originalImage.src = data.original;
+      }
+    } catch (e) {
+      console.error("LoadData Error:", e);
+      alert("Error loading data: " + e.message);
+      setLoading(false);
     }
   }
 
@@ -473,11 +735,14 @@ document.addEventListener('DOMContentLoaded', () => {
     formData.append('image', file);
 
     fetch('/', { method: 'POST', body: formData })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Server Error: " + res.statusText);
+        return res.json();
+      })
       .then(loadData)
       .catch(err => {
         console.error(err);
-        alert('Error processing image');
+        alert('Error processing image: ' + err.message);
         setLoading(false);
       });
   }
@@ -489,11 +754,14 @@ document.addEventListener('DOMContentLoaded', () => {
     formData.append('demo', 'true');
 
     fetch('/', { method: 'POST', body: formData })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Server Error: " + res.statusText);
+        return res.json();
+      })
       .then(loadData)
       .catch(err => {
         console.error(err);
-        alert('Error loading demo');
+        alert('Error loading demo: ' + err.message);
         setLoading(false);
       });
   }
@@ -626,68 +894,172 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Add Legend Box (Top Left)
-    const boxW = 350;
-    const boxH = 200;
+    // Add Legend Box (Top Left) - Expanded for Medical Report
+    const boxW = 400;
+    const boxH = 450; // Taller for more metrics
     const boxPad = 20;
     const boxX = 20;
     const boxY = 20;
 
     exCtx.save();
-    exCtx.resetTransform(); // Draw legend in screen space (aka image pixel space here)
+    exCtx.resetTransform(); // Draw legend in screen space
 
     // Semi-transparent background
-    exCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    exCtx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     exCtx.strokeStyle = '#cbd5e1';
     exCtx.lineWidth = 1;
 
+    // Shadow
+    exCtx.shadowColor = 'rgba(0,0,0,0.1)';
+    exCtx.shadowBlur = 10;
+
     // Round Rect
-    const r = 10;
+    const r = 12;
     exCtx.beginPath();
-    exCtx.moveTo(boxX + r, boxY);
-    exCtx.lineTo(boxX + boxW - r, boxY);
-    exCtx.quadraticCurveTo(boxX + boxW, boxY, boxX + boxW, boxY + r);
-    exCtx.lineTo(boxX + boxW, boxY + boxH - r);
-    exCtx.quadraticCurveTo(boxX + boxW, boxY + boxH, boxX + boxW - r, boxY + boxH);
-    exCtx.lineTo(boxX + r, boxY + boxH);
-    exCtx.quadraticCurveTo(boxX, boxY + boxH, boxX, boxY + boxH - r);
-    exCtx.lineTo(boxX, boxY + r);
-    exCtx.quadraticCurveTo(boxX, boxY, boxX + r, boxY);
-    exCtx.closePath();
+    exCtx.roundRect(boxX, boxY, boxW, boxH, r);
     exCtx.fill();
     exCtx.stroke();
+    exCtx.shadowColor = 'transparent';
 
-    // Text
+    // Text Config
+    const startTy = boxY + 50;
+    let ty = startTy;
+    const leftPad = boxX + 30;
+
+    // Header
     exCtx.fillStyle = '#1e293b';
-    exCtx.font = 'bold 24px sans-serif';
-    exCtx.textAlign = 'left';
+    exCtx.font = 'bold 28px sans-serif';
+    exCtx.fillText('OCT Analysis Report', leftPad, ty);
 
-    let ty = boxY + 40;
-    exCtx.fillText('OCT Analysis Results', boxX + 20, ty);
-
-    exCtx.font = '18px sans-serif';
-    exCtx.fillStyle = '#475569';
+    // Date
     ty += 30;
-    exCtx.fillText(`Min Distance: ${minDistanceEl.textContent} μm`, boxX + 20, ty);
+    exCtx.font = '14px sans-serif';
+    exCtx.fillStyle = '#94a3b8';
+    exCtx.fillText(new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(), leftPad, ty);
+
+    // Section: Global
+    ty += 40;
+    exCtx.font = 'bold 16px sans-serif';
+    exCtx.fillStyle = '#475569';
+    exCtx.fillText('GLOBAL METRICS', leftPad, ty);
+
     ty += 25;
-    exCtx.fillText(`Max Distance: ${maxDistanceEl.textContent} μm`, boxX + 20, ty);
+    exCtx.font = '18px sans-serif';
+    exCtx.fillStyle = '#334155';
+    exCtx.fillText(`Min Thickness: ${minDistanceEl.textContent} μm`, leftPad, ty);
     ty += 25;
-    exCtx.fillText(`Mean Distance: ${meanDistanceEl.textContent} μm`, boxX + 20, ty);
+    exCtx.fillText(`Max Thickness: ${maxDistanceEl.textContent} μm`, leftPad, ty);
     ty += 25;
-    exCtx.fillText(`Std Deviation: ${stdDistanceEl.textContent} μm`, boxX + 20, ty);
+    exCtx.fillText(`Mean Thickness: ${meanDistanceEl.textContent} μm`, leftPad, ty);
+    ty += 25;
+    exCtx.fillText(`Std Deviation: ${stdDistanceEl.textContent} μm`, leftPad, ty);
+
+    // Section: Zonal
+    ty += 40;
+    exCtx.font = 'bold 16px sans-serif';
+    exCtx.fillStyle = '#4f46e5';
+    exCtx.fillText('ZONAL ANALYSIS', leftPad, ty);
+
+    ty += 25;
+    exCtx.font = '18px sans-serif';
+    exCtx.fillStyle = '#334155';
+    exCtx.fillText(`Central (33%): ${centralDistanceEl.textContent} μm`, leftPad, ty);
+    ty += 25;
+    exCtx.fillText(`Peripheral: ${peripheralDistanceEl.textContent} μm`, leftPad, ty);
+
+    // Section: Advanced
+    ty += 40;
+    exCtx.font = 'bold 16px sans-serif';
+    exCtx.fillStyle = '#059669'; // Green/Teal
+    exCtx.fillText('MORPHOLOGY', leftPad, ty);
+
+    ty += 25;
+    exCtx.font = '18px sans-serif';
+    exCtx.fillStyle = '#334155';
+    exCtx.fillText(`Symmetry Index: ${symmetryIndexEl.textContent}`, leftPad, ty);
     ty += 25;
 
-    exCtx.fillStyle = '#4f46e5';
-    exCtx.fillText(`Central: ${centralDistanceEl.textContent} μm`, boxX + 20, ty);
-    exCtx.fillStyle = '#475569';
-    ty += 25;
-    exCtx.fillText(`Peripheral: ${peripheralDistanceEl.textContent} μm`, boxX + 20, ty);
+    // Strip HTML from radius
+    const radiusText = antRadiusEl.innerText || antRadiusEl.textContent;
+    exCtx.fillText(`Est. Radius: ${radiusText}`, leftPad, ty);
 
     exCtx.restore();
 
+    // --- DRAW GRAPH AT BOTTOM ---
+    // We want the graph to span most of the bottom width
+    // Draw a semi-transparent panel at the bottom overlaying the image
+    const graphH = 150;
+    const graphPad = 40;
+    const graphW = exportCanvas.width - (graphPad * 2);
+    const graphY = exportCanvas.height - graphH - graphPad;
+
+    if (graphW > 100) { // Ensure enough space
+      exCtx.save();
+      exCtx.resetTransform(); // Screen space
+
+      // Background Panel
+      exCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      exCtx.roundRect(graphPad, graphY, graphW, graphH, 12);
+      exCtx.fill();
+      exCtx.strokeStyle = '#e2e8f0';
+      exCtx.stroke();
+
+      // Draw Graph inside this box
+      const gInnerX = graphPad + 20;
+      const gInnerY = graphY + 20;
+      const gInnerW = graphW - 40;
+      const gInnerH = graphH - 40;
+
+      // Data
+      const dists = currentDists;
+      if (dists.length > 0) {
+        const minG = Math.min(...dists);
+        const maxG = Math.max(...dists);
+
+        // Mapping functions
+        const mapX = (i) => gInnerX + (i / (dists.length - 1)) * gInnerW;
+        const range = maxG - minG || 1;
+        const mapY = (val) => (gInnerY + gInnerH) - ((val - minG) / range) * gInnerH;
+
+        // Path
+        exCtx.beginPath();
+        exCtx.strokeStyle = '#4f46e5';
+        exCtx.lineWidth = 2;
+
+        for (let i = 0; i < dists.length; i++) {
+          const px = mapX(i);
+          const py = mapY(dists[i]);
+          if (i === 0) exCtx.moveTo(px, py);
+          else exCtx.lineTo(px, py);
+        }
+        exCtx.stroke();
+
+        // LABELS for Graph
+        exCtx.fillStyle = '#64748b';
+        exCtx.font = '14px sans-serif';
+
+        // Y Axis
+        exCtx.textAlign = 'right';
+        exCtx.fillText(`${Math.round(maxG)}`, gInnerX - 5, gInnerY + 10);
+        exCtx.fillText(`${Math.round(minG)}`, gInnerX - 5, gInnerY + gInnerH);
+
+        // X Axis
+        exCtx.textAlign = 'center';
+        exCtx.fillText("Position (px)", gInnerX + gInnerW / 2, gInnerY + gInnerH + 20);
+
+        // Title
+        exCtx.fillStyle = '#1e293b';
+        exCtx.font = 'bold 16px sans-serif';
+        exCtx.textAlign = 'left';
+        exCtx.fillText("Thickness Profile", gInnerX, gInnerY - 15);
+      }
+
+      exCtx.restore();
+    }
+
     // Download
     const link = document.createElement('a');
-    link.download = 'oct-analysis-result.png';
+    link.download = `oct-report-${new Date().getTime()}.png`;
     link.href = exportCanvas.toDataURL('image/png');
     link.click();
   });
@@ -716,5 +1088,59 @@ document.addEventListener('DOMContentLoaded', () => {
       drawOverlay();
     });
   });
+
+  // --- Tabs Logic ---
+  function setActiveTab(tab) {
+    if (tab === 'overview') {
+      contentOverview.classList.remove('hidden');
+      contentProfile.classList.add('hidden');
+
+      tabOverview.classList.add('text-indigo-600', 'border-indigo-600');
+      tabOverview.classList.remove('text-slate-500', 'border-transparent');
+
+      tabProfile.classList.remove('text-indigo-600', 'border-indigo-600');
+      tabProfile.classList.add('text-slate-500', 'border-transparent');
+    } else {
+      contentOverview.classList.add('hidden');
+      contentProfile.classList.remove('hidden');
+
+      tabProfile.classList.add('text-indigo-600', 'border-indigo-600');
+      tabProfile.classList.remove('text-slate-500', 'border-transparent');
+
+      tabOverview.classList.remove('text-indigo-600', 'border-indigo-600');
+      tabOverview.classList.add('text-slate-500', 'border-transparent');
+
+      // Trigger render for profile canvas as it was hidden
+      requestAnimationFrame(updateStats);
+    }
+  }
+
+  if (tabOverview && tabProfile) {
+    tabOverview.addEventListener('click', () => setActiveTab('overview'));
+    tabProfile.addEventListener('click', () => setActiveTab('profile'));
+  }
+
+  // --- Modal Logic ---
+  if (graphPreviewCard && graphModal && closeModalBtn) {
+    graphPreviewCard.addEventListener('click', () => {
+      graphModal.classList.remove('hidden');
+      graphModal.classList.add('flex');
+      // Trigger Resize/Render
+      requestAnimationFrame(updateStats);
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      graphModal.classList.add('hidden');
+      graphModal.classList.remove('flex');
+    });
+
+    // Close on background click
+    graphModal.addEventListener('click', (e) => {
+      if (e.target === graphModal) {
+        graphModal.classList.add('hidden');
+        graphModal.classList.remove('flex');
+      }
+    });
+  }
 
 });
