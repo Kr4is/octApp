@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Elements
   const imageInput = document.getElementById('imageInput');
   const demoBtn = document.getElementById('demoBtn');
-  const mainDemoBtn = document.getElementById('mainDemoBtn');
+  const mainDemoBtn = document.getElementById('mainDemoBtn'); // Note: This might be hidden in new layout but ID persists? Wait, I didn't verify emptyState.
   const visualizationCanvas = document.getElementById('visualizationCanvas');
   const emptyState = document.getElementById('emptyState');
   const loadingState = document.getElementById('loadingState');
@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const overlayCanvas = document.getElementById('overlayCanvas');
   const statusIndicator = document.getElementById('statusIndicator');
   const imgResLabel = document.getElementById('imgRes');
+
+  // New Container for slider opacity
+  const sliderContainer = document.getElementById('xSlider').parentElement; // Hacky but works if structure is stable, or I could add ID. 
+  // actually better to just rely on input disabled state for visual style if possible, or use the parent.
+  // Let's use xSlider.parentElement for now.
 
   // Controls
   const controlsPanel = document.getElementById('controlsPanel');
@@ -25,7 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const maxDistanceEl = document.getElementById('maxDistance');
   const meanDistanceEl = document.getElementById('meanDistance');
   const stdDistanceEl = document.getElementById('stdDistance');
-  const currentDistanceEl = document.getElementById('currentDistance');
+  const centralDistanceEl = document.getElementById('centralDistance');
+  const peripheralDistanceEl = document.getElementById('peripheralDistance');
   const exportBtn = document.getElementById('exportBtn');
 
   // Context
@@ -56,12 +62,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (enabled) {
       controlsPanel.classList.remove('opacity-50', 'pointer-events-none');
       xSlider.disabled = false;
+      sliderContainer.classList.remove('opacity-50');
       statusIndicator.classList.remove('bg-slate-300');
       statusIndicator.classList.add('bg-green-500', 'shadow-[0_0_8px_rgba(34,197,94,0.6)]');
       isImageLoaded = true;
     } else {
       controlsPanel.classList.add('opacity-50', 'pointer-events-none');
       xSlider.disabled = true;
+      sliderContainer.classList.add('opacity-50');
       statusIndicator.classList.add('bg-slate-300');
       statusIndicator.classList.remove('bg-green-500', 'shadow-[0_0_8px_rgba(34,197,94,0.6)]');
       isImageLoaded = false;
@@ -107,15 +115,37 @@ document.addEventListener('DOMContentLoaded', () => {
       const avgSquareDiff = squareDiffs.reduce((a, b) => a + b, 0) / squareDiffs.length;
       const stdDev = Math.sqrt(avgSquareDiff);
 
+      // Calculate Central vs Peripheral
+      // Central: middle 33% (approx width index from 1/3 to 2/3)
+      // We need to know indices. getCurrentDists returns array matching X indices 0..width.
+
+      const w = dists.length;
+      const oneThird = Math.floor(w / 3);
+      const twoThirds = Math.floor(2 * w / 3);
+
+      const centralDists = dists.slice(oneThird, twoThirds);
+      // Peripheral: 0..oneThird AND twoThirds..w
+      const peripheralDists = [...dists.slice(0, oneThird), ...dists.slice(twoThirds)];
+
+      const getMean = (arr) => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+
+      const centralMean = getMean(centralDists);
+      const peripheralMean = getMean(peripheralDists);
+
       minDistanceEl.textContent = min.toFixed(2);
       maxDistanceEl.textContent = max.toFixed(2);
       meanDistanceEl.textContent = mean.toFixed(2);
       stdDistanceEl.textContent = stdDev.toFixed(2);
+
+      centralDistanceEl.textContent = centralMean.toFixed(2);
+      peripheralDistanceEl.textContent = peripheralMean.toFixed(2);
     } else {
       minDistanceEl.textContent = "--";
       maxDistanceEl.textContent = "--";
       meanDistanceEl.textContent = "--";
       stdDistanceEl.textContent = "--";
+      centralDistanceEl.textContent = "--";
+      peripheralDistanceEl.textContent = "--";
     }
   }
 
@@ -292,8 +322,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const distVal = currentDists[xSelected];
       const color = getColorForDistance(distVal, minD, maxD);
 
-      // Update Interface Value
-      currentDistanceEl.textContent = distVal ? distVal.toFixed(2) : '--';
+      // Update Interface Value (if existing)
+      if (typeof currentDistanceEl !== 'undefined' && currentDistanceEl) {
+        currentDistanceEl.textContent = distVal ? distVal.toFixed(2) : '--';
+      }
 
       ctx.strokeStyle = color;
       ctx.fillStyle = color;
@@ -343,13 +375,31 @@ document.addEventListener('DOMContentLoaded', () => {
           ctx.shadowBlur = 4;
 
           // Draw below
-          ctx.fillText(distVal.toFixed(2), screenX, screenY + 40);
+          // CLAMP LOGIC: Ensure text doesn't go off canvas
+          const text = distVal.toFixed(2);
+          const textMetrics = ctx.measureText(text);
+          const textWidth = textMetrics.width;
+          const padding = 10;
+
+          let drawX = screenX;
+          // Clamp: Max(left_bound, Min(right_bound, x))
+          // Left bound: textWidth/2 + padding
+          // Right bound: canvasWidth - textWidth/2 - padding
+
+          const leftBound = textWidth / 2 + padding;
+          const rightBound = overlayCanvas.width - textWidth / 2 - padding;
+
+          drawX = Math.max(leftBound, Math.min(rightBound, drawX));
+
+          ctx.fillText(text, drawX, screenY + 40);
 
           ctx.restore();
         }
       }
     } else {
-      currentDistanceEl.textContent = '--';
+      if (typeof currentDistanceEl !== 'undefined' && currentDistanceEl) {
+        currentDistanceEl.textContent = '--';
+      }
     }
   }
 
@@ -574,6 +624,66 @@ document.addEventListener('DOMContentLoaded', () => {
         exCtx.restore();
       }
     }
+
+
+    // Add Legend Box (Top Left)
+    const boxW = 350;
+    const boxH = 200;
+    const boxPad = 20;
+    const boxX = 20;
+    const boxY = 20;
+
+    exCtx.save();
+    exCtx.resetTransform(); // Draw legend in screen space (aka image pixel space here)
+
+    // Semi-transparent background
+    exCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    exCtx.strokeStyle = '#cbd5e1';
+    exCtx.lineWidth = 1;
+
+    // Round Rect
+    const r = 10;
+    exCtx.beginPath();
+    exCtx.moveTo(boxX + r, boxY);
+    exCtx.lineTo(boxX + boxW - r, boxY);
+    exCtx.quadraticCurveTo(boxX + boxW, boxY, boxX + boxW, boxY + r);
+    exCtx.lineTo(boxX + boxW, boxY + boxH - r);
+    exCtx.quadraticCurveTo(boxX + boxW, boxY + boxH, boxX + boxW - r, boxY + boxH);
+    exCtx.lineTo(boxX + r, boxY + boxH);
+    exCtx.quadraticCurveTo(boxX, boxY + boxH, boxX, boxY + boxH - r);
+    exCtx.lineTo(boxX, boxY + r);
+    exCtx.quadraticCurveTo(boxX, boxY, boxX + r, boxY);
+    exCtx.closePath();
+    exCtx.fill();
+    exCtx.stroke();
+
+    // Text
+    exCtx.fillStyle = '#1e293b';
+    exCtx.font = 'bold 24px sans-serif';
+    exCtx.textAlign = 'left';
+
+    let ty = boxY + 40;
+    exCtx.fillText('OCT Analysis Results', boxX + 20, ty);
+
+    exCtx.font = '18px sans-serif';
+    exCtx.fillStyle = '#475569';
+    ty += 30;
+    exCtx.fillText(`Min Distance: ${minDistanceEl.textContent} μm`, boxX + 20, ty);
+    ty += 25;
+    exCtx.fillText(`Max Distance: ${maxDistanceEl.textContent} μm`, boxX + 20, ty);
+    ty += 25;
+    exCtx.fillText(`Mean Distance: ${meanDistanceEl.textContent} μm`, boxX + 20, ty);
+    ty += 25;
+    exCtx.fillText(`Std Deviation: ${stdDistanceEl.textContent} μm`, boxX + 20, ty);
+    ty += 25;
+
+    exCtx.fillStyle = '#4f46e5';
+    exCtx.fillText(`Central: ${centralDistanceEl.textContent} μm`, boxX + 20, ty);
+    exCtx.fillStyle = '#475569';
+    ty += 25;
+    exCtx.fillText(`Peripheral: ${peripheralDistanceEl.textContent} μm`, boxX + 20, ty);
+
+    exCtx.restore();
 
     // Download
     const link = document.createElement('a');
