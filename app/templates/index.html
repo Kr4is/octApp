@@ -82,13 +82,14 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 h-[calc(100vh-4rem)]">
+    <main
+        class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 lg:h-[calc(100vh-4rem)]">
 
         <!-- Top Section: Toolbar & Visualization -->
-        <div class="flex flex-col lg:flex-row gap-6 h-[60%]">
+        <div class="flex flex-col lg:flex-row gap-6 lg:h-[60%] shrink-0">
 
             <!-- Floating Toolbar (Left) -->
-            <div class="lg:w-64 flex-shrink-0 flex flex-col gap-4">
+            <div class="lg:w-64 flex-shrink-0 flex flex-col md:flex-row lg:flex-col gap-4">
                 <!-- Upload/Input -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
                     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Input Source</h2>
@@ -171,7 +172,8 @@
             </div>
 
             <!-- Visualization Canvas (Center/Right) -->
-            <div class="flex-grow flex flex-col h-full overflow-hidden bg-slate-900 rounded-2xl relative shadow-2xl">
+            <div
+                class="flex-grow flex flex-col h-[50vh] lg:h-full overflow-hidden bg-slate-900 rounded-2xl relative shadow-2xl">
                 <!-- Image Area -->
                 <div class="flex-grow relative overflow-hidden flex items-center justify-center group"
                     id="visualizationCanvas">
@@ -209,7 +211,8 @@
         </div>
 
         <!-- Bottom Section: Analysis Dashboard -->
-        <div class="h-[40%] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+        <div
+            class="lg:h-[40%] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col shrink-0 min-h-0">
             <!-- Tabs Header -->
             <div class="flex items-center border-b border-slate-100 px-6">
                 <button id="tabOverview"
