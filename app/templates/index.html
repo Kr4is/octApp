@@ -91,21 +91,17 @@
             <!-- Floating Toolbar (Left) -->
             <div class="lg:w-64 flex-shrink-0 flex flex-col md:flex-row lg:flex-col gap-4">
                 <!-- Upload/Input -->
+                <!-- Input Scans -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
                     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Input Source</h2>
                     <div class="flex flex-col gap-2">
-                        <input type="file" id="imageInput" class="hidden" accept="image/*">
-                        <label for="imageInput"
-                            class="flex items-center justify-center gap-2 w-full py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 cursor-pointer transition-colors text-sm font-medium">
+                        <button id="selectDemoBtn"
+                            class="flex items-center justify-center gap-2 w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium shadow-sm hover:shadow-md">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            Upload Image
-                        </label>
-                        <button id="mainDemoBtn"
-                            class="flex items-center justify-center gap-2 w-full py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium">
-                            Load Demo
+                            Select Scan
                         </button>
                     </div>
                 </div>
@@ -338,6 +334,40 @@
         </div>
 
     </main>
+
+    <!-- Demo Selection Modal -->
+    <div id="demoModal"
+        class="hidden fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4 sm:p-6 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden relative transform scale-95 transition-transform duration-300"
+            id="demoModalContent">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white z-10">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Select OCT Scan</h3>
+                    <p class="text-sm text-slate-400">Choose a sample scan to analyze</p>
+                </div>
+
+                <button id="closeDemoModalBtn"
+                    class="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-grow p-6 bg-slate-50 overflow-y-auto">
+                <div id="demoGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <!-- Javascript will populate this -->
+                    <div class="col-span-full flex justify-center py-12">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Graph Modal -->
     <div id="graphModal"

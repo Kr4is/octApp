@@ -1,8 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Elements
-  const imageInput = document.getElementById('imageInput');
-  const demoBtn = document.getElementById('demoBtn');
-  const mainDemoBtn = document.getElementById('mainDemoBtn'); // Note: This might be hidden in new layout but ID persists? Wait, I didn't verify emptyState.
+  const selectDemoBtn = document.getElementById('selectDemoBtn');
+  const demoBtn = document.getElementById('demoBtn'); // Navbar button
+  const demoModal = document.getElementById('demoModal');
+  const demoModalContent = document.getElementById('demoModalContent');
+  const closeDemoModalBtn = document.getElementById('closeDemoModalBtn');
+  const demoGrid = document.getElementById('demoGrid');
   const visualizationCanvas = document.getElementById('visualizationCanvas');
   const emptyState = document.getElementById('emptyState');
   const loadingState = document.getElementById('loadingState');
@@ -708,32 +711,72 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function handleUpload(file) {
-    if (!file) return;
-    setControlState(false);
-    setLoading(true);
+  // --- Demo Selection Logic ---
 
-    const formData = new FormData();
-    formData.append('image', file);
+  function toggleDemoModal(show) {
+    if (show) {
+      demoModal.classList.remove('hidden');
+      // Trigger reflow
+      void demoModal.offsetWidth;
+      demoModal.classList.remove('opacity-0');
+      demoModalContent.classList.remove('scale-95');
 
-    fetch('/', { method: 'POST', body: formData })
-      .then(res => {
-        if (!res.ok) throw new Error("Server Error: " + res.statusText);
-        return res.json();
+      loadDemoImages();
+    } else {
+      demoModal.classList.add('opacity-0');
+      demoModalContent.classList.add('scale-95');
+      setTimeout(() => {
+        demoModal.classList.add('hidden');
+      }, 300);
+    }
+  }
+
+  function loadDemoImages() {
+    fetch('/demo-images')
+      .then(res => res.json())
+      .then(images => {
+        demoGrid.innerHTML = '';
+        if (images.length === 0) {
+          demoGrid.innerHTML = '<p class="col-span-full text-center text-slate-500">No demo images found.</p>';
+          return;
+        }
+
+        images.forEach(filename => {
+          const div = document.createElement('div');
+          div.className = 'group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer border-2 border-transparent hover:border-indigo-500 transition-all shadow-sm hover:shadow-md';
+
+          const img = document.createElement('img');
+          img.src = `/static/demo_images/${filename}`;
+          img.className = 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-110';
+
+          const overlay = document.createElement('div');
+          overlay.className = 'absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-end p-3';
+
+          const label = document.createElement('span');
+          label.className = 'text-xs font-medium text-white bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0';
+          label.textContent = filename;
+
+          overlay.appendChild(label);
+          div.appendChild(img);
+          div.appendChild(overlay);
+
+          div.onclick = () => selectDemoImage(filename);
+          demoGrid.appendChild(div);
+        });
       })
-      .then(loadData)
       .catch(err => {
         console.error(err);
-        alert('Error processing image: ' + err.message);
-        setLoading(false);
+        demoGrid.innerHTML = '<p class="col-span-full text-center text-red-500">Error loading images.</p>';
       });
   }
 
-  function handleDemo() {
+  function selectDemoImage(filename) {
     setControlState(false);
     setLoading(true);
+    toggleDemoModal(false);
+
     const formData = new FormData();
-    formData.append('demo', 'true');
+    formData.append('filename', filename);
 
     fetch('/', { method: 'POST', body: formData })
       .then(res => {
@@ -750,9 +793,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Event Listeners ---
 
-  imageInput.addEventListener('change', () => handleUpload(imageInput.files[0]));
-  demoBtn.addEventListener('click', handleDemo);
-  mainDemoBtn.addEventListener('click', handleDemo);
+  if (selectDemoBtn) selectDemoBtn.addEventListener('click', () => toggleDemoModal(true));
+  if (demoBtn) demoBtn.addEventListener('click', () => toggleDemoModal(true));
+  if (closeDemoModalBtn) closeDemoModalBtn.addEventListener('click', () => toggleDemoModal(false));
+
+  // Close on backdrop click
+  demoModal.addEventListener('click', (e) => {
+    if (e.target === demoModal) toggleDemoModal(false);
+  });
 
   window.addEventListener('resize', () => { setTimeout(() => { resizeCanvas(); drawOverlay(); }, 100); });
 
