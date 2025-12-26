@@ -45,5 +45,5 @@ COPY . .
 # Expose the application port
 EXPOSE 5000
 
-# Run the application
-CMD ["python", "run.py"]
+# Run the application using gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
