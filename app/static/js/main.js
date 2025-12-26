@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const canvasContainer = document.getElementById('canvasContainer');
   const originalImage = document.getElementById('originalImage');
   const overlayCanvas = document.getElementById('overlayCanvas');
-  const statusIndicator = document.getElementById('statusIndicator');
+
   const imgResLabel = document.getElementById('imgRes');
 
   // New Container for slider opacity
@@ -98,15 +98,13 @@ document.addEventListener('DOMContentLoaded', () => {
       controlsPanel.classList.remove('opacity-50', 'pointer-events-none');
       xSlider.disabled = false;
       sliderContainer.classList.remove('opacity-50');
-      statusIndicator.classList.remove('bg-slate-300');
-      statusIndicator.classList.add('bg-green-500', 'shadow-[0_0_8px_rgba(34,197,94,0.6)]');
+
       isImageLoaded = true;
     } else {
       controlsPanel.classList.add('opacity-50', 'pointer-events-none');
       xSlider.disabled = true;
       sliderContainer.classList.add('opacity-50');
-      statusIndicator.classList.add('bg-slate-300');
-      statusIndicator.classList.remove('bg-green-500', 'shadow-[0_0_8px_rgba(34,197,94,0.6)]');
+
       isImageLoaded = false;
     }
   }
