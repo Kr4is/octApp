@@ -3,42 +3,42 @@ import numpy as np
 import copy
 import random
 
-def imageImprovement(readImage):
-    """Mejora la calidad de la imagen usando CLAHE."""
-    improvedImage = readImage
-    claheOfImage = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
-    improvedImage = claheOfImage.apply(improvedImage)
-    return improvedImage
+def improve_image(read_image):
+    """Improves image quality using CLAHE."""
+    improved_image = read_image
+    clahe_of_image = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
+    improved_image = clahe_of_image.apply(improved_image)
+    return improved_image
 
-def imageMorphology(readImage):
-    """Aplica operaciones morfológicas para limpiar la imagen."""
-    morphImage = readImage
-    openKernel = np.ones((3,3), np.uint8)
-    morphImage = cv2.morphologyEx(morphImage, cv2.MORPH_OPEN, openKernel)
-    closeKernel = np.ones((20,20),np.uint8)
-    morphImage = cv2.morphologyEx(morphImage, cv2.MORPH_CLOSE, closeKernel)
-    return morphImage
+def apply_morphology(read_image):
+    """Applies morphological operations to clean the image."""
+    morph_image = read_image
+    open_kernel = np.ones((3,3), np.uint8)
+    morph_image = cv2.morphologyEx(morph_image, cv2.MORPH_OPEN, open_kernel)
+    close_kernel = np.ones((20,20),np.uint8)
+    morph_image = cv2.morphologyEx(morph_image, cv2.MORPH_CLOSE, close_kernel)
+    return morph_image
 
-def preprocessImage(readImage):
-    """Pipeline de preprocesamiento."""
-    preprocessedImage = readImage
-    improvedImage = imageImprovement(preprocessedImage)
-    preprocessedImage = imageMorphology(improvedImage)
-    return preprocessedImage
+def preprocess_image(read_image):
+    """Preprocessing pipeline."""
+    preprocessed_image = read_image
+    improved_image = improve_image(preprocessed_image)
+    preprocessed_image = apply_morphology(improved_image)
+    return preprocessed_image
 
-def edgeDetection(readImage):
-    """Detecta bordes usando Canny."""
-    edgeDetected = readImage
-    edgeDetected = cv2.Canny(edgeDetected, 425, 150, L2gradient=True)
-    return edgeDetected
+def detect_edges(read_image):
+    """Detects edges using Canny."""
+    edge_detected = read_image
+    edge_detected = cv2.Canny(edge_detected, 425, 150, L2gradient=True)
+    return edge_detected
 
-def getCountours(img, thr=100, method='perimeter'):
-    """Obtiene contornos filtrados por umbral."""
+def get_contours(img, thr=100, method='perimeter'):
+    """Obtains contours filtered by threshold."""
     cont, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return [c for c in cont if (cv2.arcLength(c, True) if method == 'perimeter' else cv2.contourArea(c)) > thr]
 
-def getBiggestNCont(cnt, n, method='perimeter'):
-    """Devuelve los N contornos más grandes."""
+def get_biggest_n_contours(cnt, n, method='perimeter'):
+    """Returns the N largest contours."""
     kfun = None
     if method == 'area':
         kfun = lambda x: cv2.contourArea(x)
@@ -47,8 +47,8 @@ def getBiggestNCont(cnt, n, method='perimeter'):
     a = sorted(cnt, key=kfun, reverse=True)
     return a[:n]
 
-def getCentroids(cont):
-    """Calcula los centroides de los contornos."""
+def get_centroids(cont):
+    """Calculates centroids of contours."""
     centroids = []
     kfun = lambda x: x[0][1]
     for c in cont:
@@ -60,62 +60,60 @@ def getCentroids(cont):
     centroids = sorted(centroids, key=kfun, reverse=False)
     return centroids
 
-def interpCurve(points):
-    """Interpola una curva polinómica de grado 2 a partir de puntos."""
+def interpolate_curve(points):
+    """Interpolates a degree 2 polynomial curve from points."""
     cont = points[1]
     cx, cy = ([a[0][0] for a in cont], [b[0][1] for b in cont])
     if not cx or not cy:
         return lambda x: 0
     return np.poly1d(np.polyfit(cx, cy, deg=2))
 
-def processImage(readImage):
-    """Procesa la imagen completa redimensionando para rendimiento."""
+def process_image(read_image):
+    """Processes the complete image resizing for performance."""
     scale_percent = 50
-    width = int(readImage.shape[1] * scale_percent / 100)
-    height = int(readImage.shape[0] * scale_percent / 100)
+    width = int(read_image.shape[1] * scale_percent / 100)
+    height = int(read_image.shape[0] * scale_percent / 100)
     dim = (width, height)
-    resized = cv2.resize(readImage, dim, interpolation=cv2.INTER_AREA)
+    resized = cv2.resize(read_image, dim, interpolation=cv2.INTER_AREA)
     
-    preprocessedImage = preprocessImage(resized)
-    edgeDetected = edgeDetection(preprocessedImage)
+    preprocessed_image = preprocess_image(resized)
+    edge_detected = detect_edges(preprocessed_image)
     
-    edgeDetected = cv2.resize(edgeDetected, (readImage.shape[1], readImage.shape[0]), 
+    edge_detected = cv2.resize(edge_detected, (read_image.shape[1], read_image.shape[0]), 
                              interpolation=cv2.INTER_LINEAR)
-    return edgeDetected
+    return edge_detected
 
-def getCurves(readImage, readImageBGR):
-    """Función principal para obtener las funciones de las curvas superior e inferior."""
+def get_curves(read_image, read_image_bgr):
+    """Main function to obtain the top and bottom curve functions."""
     try:
-        processedImage = processImage(readImage)
-        preImg = processedImage
+        processed_image = process_image(read_image)
         
-        cont = getCountours(preImg, 800, method='area')
-        if not cont:
+        contours = get_contours(processed_image, 800, method='area')
+        if not contours:
             return lambda x: x*0, lambda x: x*0
             
-        bc = getBiggestNCont(cont, 4, method='area')
-        if len(bc) < 4:
-            # Fallback a 3 o 2 si no encuentra 4, pero por ahora mantenemos lógica original
-            # Podríamos mejorar esto en el futuro
+        biggest_contours = get_biggest_n_contours(contours, 4, method='area')
+        if len(biggest_contours) < 4:
+            # Fallback to 3 or 2 if 4 are not found, but for now keeping original logic
             pass 
             
-        centroids = getCentroids(bc)
+        centroids = get_centroids(biggest_contours)
         if len(centroids) < 3:
             return lambda x: x*0, lambda x: x*0
             
-        # Asumimos que el primer centroide es ruido/exterior y lo quitamos
+        # Assume first centroid is noise/exterior and remove it
         centroids.pop(0)
         
         if len(centroids) < 2:
              return lambda x: x*0, lambda x: x*0
 
-        funcUp = interpCurve(centroids[0])
-        funcDown = interpCurve(centroids[1])
+        func_up = interpolate_curve(centroids[0])
+        func_down = interpolate_curve(centroids[1])
         
-        return funcUp, funcDown
+        return func_up, func_down
         
     except Exception as e:
-        print(f"Error en getCurves: {str(e)}")
+        print(f"Error in get_curves: {str(e)}")
         import traceback
         traceback.print_exc()
         return lambda x: x*0, lambda x: x*0

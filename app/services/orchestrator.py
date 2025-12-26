@@ -1,35 +1,35 @@
 import cv2
 import numpy as np
-from app.services.image_processing import getCurves
-from app.services.geometry import getUpPointDistances, getNearestPointDistances
+from app.services.image_processing import get_curves
+from app.services.geometry import get_vertical_distances, get_euclidean_distances
 
 def analyze_oct_image(image_path):
     """
-    Procesa una imagen OCT desde un path y devuelve los resultados estructurados.
-    Devuelve None si no se puede leer la imagen.
+    Processes an OCT image from a path and returns structured results.
+    Returns None if the image cannot be read.
     """
     img = cv2.imread(image_path)
     if img is None:
         return None
         
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    func_up, func_down = getCurves(gray_img, img)
+    func_up, func_down = get_curves(gray_img, img)
     
-    # Validar si se detectaron curvas (heurística simple: si retorna 0 en todos lados)
-    # getCurves usamos fallback lambda x: x*0.
-    # Verificamos si la curva es plana en 0 (indicativo de fallo).
-    # Ojo: Una curva real podría ser 0? En el contexto de la imagen, 0 es el borde superior. 
-    # Generalmente la cornea no está en y=0 pegada.
+    # Validate if curves were detected (simple heuristic: if it returns 0 everywhere)
+    # get_curves uses fallback lambda x: x*0.
+    # We check if the curve is flat at 0 (indicative of failure).
+    # Note: A real curve could be 0? In the context of the image, 0 is the top edge. 
+    # Generally, the cornea is not stuck at y=0.
     
-    up_points, up_dists = getUpPointDistances(gray_img, func_down, func_up)
-    euclidean_points, euclidean_dists = getNearestPointDistances(gray_img, func_down, func_up)
+    vertical_points, vertical_dists = get_vertical_distances(gray_img, func_down, func_up)
+    euclidean_points, euclidean_dists = get_euclidean_distances(gray_img, func_down, func_up)
     
     height, width = gray_img.shape
     
     curve_up_points = []
     curve_down_points = []
     
-    # Muestrear curvas
+    # Sample curves
     for x in range(width):
         y_up = int(func_up(x))
         y_down = int(func_down(x))
@@ -37,12 +37,12 @@ def analyze_oct_image(image_path):
         curve_down_points.append([x, y_down])
         
     points_by_type = {
-        'up': up_points,
+        'up': vertical_points,
         'euclidean': euclidean_points
     }
     
     dists_by_type = {
-        'up': up_dists,
+        'up': vertical_dists,
         'euclidean': euclidean_dists
     }
     

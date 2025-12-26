@@ -15,11 +15,11 @@ def client(app):
 
 @pytest.fixture
 def sample_image():
-    # Crear una imagen sintética para pruebas
+    # Create a synthetic image for testing
     img = np.zeros((100, 100, 3), dtype=np.uint8)
-    # Dibujar dos líneas blancas simulando curvas
-    cv2.line(img, (0, 30), (100, 30), (255, 255, 255), 2) # Curva superior
-    cv2.line(img, (0, 70), (100, 70), (255, 255, 255), 2) # Curva inferior
+    # Draw two white lines simulating curves
+    cv2.line(img, (0, 30), (100, 30), (255, 255, 255), 2) # Top curve
+    cv2.line(img, (0, 70), (100, 70), (255, 255, 255), 2) # Bottom curve
     return img
 
 @pytest.fixture

@@ -1,19 +1,17 @@
 import numpy as np
 
-def getUpPointDistances(img, funcDown, funcUp):
-    """Calcula distancias verticales entre curvas."""
+def get_vertical_distances(img, func_down, func_up):
+    """Calculates vertical distances between curves."""
     width = img.shape[1]
-    points = []
-    distances = []
     
-    # Vectorización simple
+    # Simple vectorization
     x_range = np.arange(width)
-    y1_values = funcDown(x_range)
-    y2_values = funcUp(x_range)
+    y1_values = func_down(x_range)
+    y2_values = func_up(x_range)
     
     distances = y1_values - y2_values
     
-    # Reconstruir formato de puntos para frontend (lista de tuplas)
+    # Reconstruct point format for frontend (list of tuples)
     # ((x, y_down), (x, y_up))
     points = []
     for x in range(width):
@@ -21,19 +19,19 @@ def getUpPointDistances(img, funcDown, funcUp):
          
     return points, distances.tolist()
 
-def getNearestPointDistances(img, funcDown, funcUp):
-    """Calcula la distancia euclidiana mínima entre curvas."""
+def get_euclidean_distances(img, func_down, func_up):
+    """Calculates the minimum Euclidean distance between curves."""
     width = img.shape[1]
     points = []
     distances = []
     
     x_range = np.arange(width)
-    y1_values = funcDown(x_range)
-    y2_values = funcUp(x_range)
+    y1_values = func_down(x_range)
+    y2_values = func_up(x_range)
     
-    # Esto es O(N^2) más o menos, podría optimizarse con KDTree si fuera muy lento,
-    # pero para anchos de imagen típicos (1000-2000px) es aceptable.
-    # La implementación original ya vectorizaba la búsqueda interna.
+    # This is roughly O(N^2), could be optimized with KDTree if it were very slow,
+    # but for typical image widths (1000-2000px) it is acceptable.
+    # The original implementation already vectorized the internal search.
     
     for x1 in range(width):
         y1 = y1_values[x1]
