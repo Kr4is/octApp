@@ -1,0 +1,11 @@
+.venv
+__pycache__
+*.pyc
+.git
+.gitignore
+.dockerignore
+instance
+uploads/*
+!uploads/.gitkeep
+.python-version
+/home/bruno/.gemini

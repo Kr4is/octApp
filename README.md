@@ -56,6 +56,27 @@ uv run python run.py
 ```
 Then visit `http://localhost:5000` in your browser.
 
+## 🐳 Deployment with Docker
+
+You can easily deploy **OCT Vision** using Docker and Docker Compose. This ensures all system dependencies (OpenCV, etc.) are correctly configured.
+
+### Using Docker Compose (Recommended)
+1. **Build and Start**:
+   ```bash
+   docker compose up --build -d
+   ```
+2. **Access**: The application will be available at `http://localhost:5000`.
+
+### Using Dockerfile Directly
+1. **Build**:
+   ```bash
+   docker build -t oct-vision .
+   ```
+2. **Run**:
+   ```bash
+   docker run -p 5000:5000 oct-vision
+   ```
+
 ### 4. Run Tests
 ```bash
 PYTHONPATH=. uv run python3 -m pytest
