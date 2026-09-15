@@ -6,7 +6,6 @@ def create_app(test_config=None):
     
     # Default configuration
     app.config.from_mapping(
-        SECRET_KEY=os.environ.get('SECRET_KEY', 'dev'),
         UPLOAD_FOLDER=os.path.join(app.root_path, 'static/uploads'),
     )
 
