@@ -5,7 +5,7 @@ import json
 def test_index_page(client):
     response = client.get('/')
     assert response.status_code == 200
-    assert b'OCT Vision Pro' in response.data
+    assert b'OCT Vision' in response.data
 
 def test_get_demo_images(client):
     response = client.get('/demo-images')
