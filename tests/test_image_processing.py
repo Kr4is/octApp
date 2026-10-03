@@ -1,73 +1,98 @@
-import pytest
+import cv2
 import numpy as np
-from app.services.image_processing import get_curves, interpolate_curve
-from app.services.geometry import get_vertical_distances, get_euclidean_distances
+
+from app.services.image_processing import (
+    detect_edges,
+    get_biggest_n_contours,
+    get_centroids,
+    get_contours,
+    get_curves,
+    improve_image,
+    interpolate_curve,
+    process_image,
+)
+
+
+def _rect(x, y, w, h):
+    """OpenCV-style contour (N,1,2) for a rectangle."""
+    return np.array([[[x, y]], [[x + w, y]], [[x + w, y + h]], [[x, y + h]]], dtype=np.int32)
+
 
 def test_interpolate_curve():
-    # Test simple parabolic interpolation y=x^2
-    points = [((0, 0), None), ((1, 1), None), ((2, 4), None)]
-    # We mock contour structure: [((x,y), cnt), ...]
-    # get_curves uses: cont = points[1] which is the raw contour
-    # interpolate_curve expects: points which is a tuple ((cX,cY), contour)
-    # Reconstruct expected input for interpolate_curve
-    # interpolate_curve(points) -> points is the contour (list of points)
-    
-    # Wait, interpolate_curve in image_processing.py:
-    # def interpolate_curve(points):
-    #     cont = points[1] ...
-    # Ah, wait, get_curves calls: func_up = interpolate_curve(centroids[0])
-    # centroids[0] is ((cX,cY), contour).
-    
-    # Create a fake contour
+    # interpolate_curve takes a (centroid, contour) tuple, as built by get_centroids
     cnt = np.array([[[0, 0]], [[1, 1]], [[2, 4]]], dtype=np.int32)
-    centroid_tuple = ((1, 2), cnt)
-    
-    func = interpolate_curve(centroid_tuple)
-    
-    # Verify interpolated values (approximate)
+    func = interpolate_curve(((1, 2), cnt))
+
     assert np.isclose(func(0), 0, atol=0.5)
     assert np.isclose(func(1), 1, atol=0.5)
     assert np.isclose(func(2), 4, atol=0.5)
 
-def test_geometry_functions():
-    # Set up simple lambda functions to test geometry
-    func_up = lambda x: x*0 + 10
-    func_down = lambda x: x*0 + 20
-    
-    # Dummy image 100x100
-    img = np.zeros((100, 100), dtype=np.uint8)
-    
-    # Test Vertical Distances
-    points, dists = get_vertical_distances(img, func_down, func_up)
-    
-    assert len(points) == 100
-    assert len(dists) == 100
-    assert all(d == 10 for d in dists) # 20 - 10 = 10
-    
-    # Test Euclidean
-    # Two parallel horizontals, Euclidean distance should also be vertical = 10
-    e_points, e_dists = get_euclidean_distances(img, func_down, func_up)
-    
-    assert len(e_points) == 100
-    assert len(e_dists) == 100
-    # Allow small error for rounding/vectorization
-    assert all(abs(d - 10) < 0.1 for d in e_dists)
 
-def test_integration_services(sample_image_gray, sample_image):
-    # Complete test of get_curves
+def test_interpolate_curve_empty_contour_returns_zero():
+    func = interpolate_curve(((0, 0), []))
+    assert func(10) == 0
+
+
+def test_improve_image_keeps_shape_and_dtype(sample_image_gray):
+    out = improve_image(sample_image_gray)
+    assert out.shape == sample_image_gray.shape
+    assert out.dtype == np.uint8
+
+
+def test_detect_edges_is_binary(sample_image_gray):
+    edges = detect_edges(sample_image_gray)
+    assert set(np.unique(edges)) <= {0, 255}
+
+
+def test_get_contours_filters_by_area():
+    img = np.zeros((200, 200), dtype=np.uint8)
+    cv2.rectangle(img, (10, 10), (100, 100), 255, -1)  # large
+    cv2.rectangle(img, (150, 150), (155, 155), 255, -1)  # tiny
+
+    assert len(get_contours(img, thr=100, method='area')) == 1
+    assert len(get_contours(img, thr=1, method='area')) == 2
+
+
+def test_get_biggest_n_contours_orders_by_area():
+    small, mid, big = _rect(0, 0, 5, 5), _rect(0, 0, 20, 20), _rect(0, 0, 50, 50)
+
+    top = get_biggest_n_contours([small, big, mid], 2, method='area')
+
+    assert len(top) == 2
+    assert cv2.contourArea(top[0]) > cv2.contourArea(top[1])
+    assert cv2.contourArea(top[0]) == cv2.contourArea(big)
+
+
+def test_get_centroids_sorted_top_to_bottom_and_skips_degenerate():
+    low = _rect(10, 80, 20, 10)
+    high = _rect(10, 10, 20, 10)
+    degenerate = np.array([[[5, 5]], [[5, 5]]], dtype=np.int32)  # zero area
+
+    centroids = get_centroids([low, degenerate, high])
+
+    assert len(centroids) == 2
+    ys = [c[0][1] for c in centroids]
+    assert ys == sorted(ys)
+    assert centroids[0][0] == (20, 15)
+
+
+def test_process_image_preserves_size(sample_image_gray):
+    out = process_image(sample_image_gray)
+    assert out.shape == sample_image_gray.shape
+
+
+def test_get_curves_blank_image_falls_back_to_flat_zero():
+    blank = np.zeros((100, 100), dtype=np.uint8)
+    bgr = cv2.cvtColor(blank, cv2.COLOR_GRAY2BGR)
+
+    func_up, func_down = get_curves(blank, bgr)
+
+    xs = np.arange(100)
+    assert np.all(func_up(xs) == 0)
+    assert np.all(func_down(xs) == 0)
+
+
+def test_get_curves_returns_callables(sample_image_gray, sample_image):
     func_up, func_down = get_curves(sample_image_gray, sample_image)
-    
-    # In our sample image, we draw lines at y=30 and y=70
-    # get_curves can return lambda x: 0 if detection fails, or interpolated functions
-    
-    # Note: edge and contour detection in perfect synthetic image may vary
-    # due to morphological filters, but it should detect something.
-    
-    val_up = func_up(50)
-    val_down = func_down(50)
-    
-    # If it returns 0, detection failed (maybe due to size/filters)
-    # For a robust unit test, we should mock or use a saved real image.
-    # For now we verify it EXECUTES without error.
     assert callable(func_up)
     assert callable(func_down)

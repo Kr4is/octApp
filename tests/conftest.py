@@ -1,8 +1,10 @@
-import pytest
-import os
+
 import cv2
 import numpy as np
+import pytest
+
 from app import create_app
+
 
 @pytest.fixture
 def app():

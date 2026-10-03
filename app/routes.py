@@ -1,8 +1,8 @@
 import os
-import cv2
-import numpy as np
-from flask import Blueprint, render_template, request, jsonify, send_from_directory, current_app
+
+from flask import Blueprint, current_app, jsonify, render_template, request, send_from_directory
 from werkzeug.utils import secure_filename
+
 from app.services.orchestrator import analyze_oct_image
 
 bp = Blueprint('main', __name__)

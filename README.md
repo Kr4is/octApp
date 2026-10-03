@@ -79,8 +79,15 @@ You can easily deploy **OCT Vision** using Docker and Docker Compose. This ensur
 
 ### 4. Run Tests
 ```bash
-PYTHONPATH=. uv run python3 -m pytest
+uv run pytest
 ```
+
+### 5. Pre-commit hooks
+Ruff (lint) and the test suite run before every commit. Install once with:
+```bash
+uv run pre-commit install
+```
+Run all hooks manually with `uv run pre-commit run --all-files`.
 
 ## 📊 Methodology
 

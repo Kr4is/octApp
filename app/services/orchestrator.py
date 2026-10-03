@@ -1,7 +1,8 @@
 import cv2
-import numpy as np
+
+from app.services.geometry import get_euclidean_distances, get_vertical_distances
 from app.services.image_processing import get_curves
-from app.services.geometry import get_vertical_distances, get_euclidean_distances
+
 
 def analyze_oct_image(image_path):
     """

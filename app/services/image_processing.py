@@ -1,7 +1,7 @@
+
 import cv2
 import numpy as np
-import copy
-import random
+
 
 def improve_image(read_image):
     """Improves image quality using CLAHE."""

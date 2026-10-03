@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def get_vertical_distances(img, func_down, func_up):
     """Calculates vertical distances between curves."""
     width = img.shape[1]
