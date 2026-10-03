@@ -2,10 +2,15 @@ import pytest
 import io
 import json
 
-def test_index_page(client):
+def test_landing_page(client):
     response = client.get('/')
     assert response.status_code == 200
     assert b'OCT Vision' in response.data
+
+def test_app_page(client):
+    response = client.get('/app')
+    assert response.status_code == 200
+    assert b'id="xSlider"' in response.data
 
 def test_get_demo_images(client):
     response = client.get('/demo-images')
@@ -18,7 +23,7 @@ def test_get_demo_images(client):
 
 def test_demo_analysis(client):
     # Test analysis of a specific demo image
-    response = client.post('/', data={'filename': 'demo1.jpeg'})
+    response = client.post('/app', data={'filename': 'demo1.jpeg'})
     
     assert response.status_code == 200
     json_data = response.get_json()

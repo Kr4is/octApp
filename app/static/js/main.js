@@ -208,22 +208,22 @@ document.addEventListener('DOMContentLoaded', () => {
       centralDistanceEl.textContent = centralMean.toFixed(0);
       peripheralDistanceEl.textContent = periphMean.toFixed(0);
 
-      const maxBar = 1000;
+      const maxBar = maxD || 1;
       centralBar.style.width = Math.min(100, (centralMean / maxBar) * 100) + '%';
       peripheralBar.style.width = Math.min(100, (periphMean / maxBar) * 100) + '%';
 
       symmetryIndexEl.textContent = symIdx.toFixed(1) + '%';
       if (symIdx < 5) {
         symmetryTag.textContent = "Normal";
-        symmetryTag.className = "px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700";
+        symmetryTag.className = "tag tag-ok";
         symmetryTag.classList.remove('hidden');
       } else {
         symmetryTag.textContent = "High Asymmetry";
-        symmetryTag.className = "px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700";
+        symmetryTag.className = "tag tag-warn";
         symmetryTag.classList.remove('hidden');
       }
 
-      antRadiusEl.innerHTML = (rad > 0 && rad < 100) ? `${rad.toFixed(2)} <span class="text-sm font-normal text-slate-500">mm</span>` : '--';
+      antRadiusEl.innerHTML = (rad > 0 && rad < 100) ? `${rad.toFixed(2)} <span class="unit">mm</span>` : '--';
 
       // Render Graphs
       renderGraph(graphCanvas, dists, meanVal);
@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // AXES & LABELS
     if (showAxes) {
-      gCtx.fillStyle = '#64748b';
+      gCtx.fillStyle = '#8B96A5';
       gCtx.font = '10px sans-serif';
       gCtx.textAlign = 'right';
 
@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
       gCtx.fillText(data.length, w - 10, h - 5);
 
       // Axis Lines
-      gCtx.strokeStyle = '#e2e8f0';
+      gCtx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
       gCtx.lineWidth = 1;
       gCtx.beginPath();
       gCtx.moveTo(padLeft, 0); gCtx.lineTo(padLeft, h - padBottom); // Y
@@ -342,14 +342,14 @@ document.addEventListener('DOMContentLoaded', () => {
     gCtx.closePath();
 
     const grad = gCtx.createLinearGradient(0, 0, 0, h);
-    grad.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
-    grad.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+    grad.addColorStop(0, 'rgba(94, 224, 210, 0.22)');
+    grad.addColorStop(1, 'rgba(94, 224, 210, 0)');
     gCtx.fillStyle = grad;
     gCtx.fill();
 
     // Draw Line
     gCtx.beginPath();
-    gCtx.strokeStyle = '#4f46e5';
+    gCtx.strokeStyle = '#5EE0D2';
     gCtx.lineWidth = 2;
     for (let i = 0; i < data.length; i++) {
       if (i === 0) gCtx.moveTo(mapX(i), mapY(data[i]));
@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Draw Mean Line
     const yMean = mapY(meanVal);
     gCtx.beginPath();
-    gCtx.strokeStyle = '#94a3b8';
+    gCtx.strokeStyle = '#8B96A5';
     gCtx.setLineDash([4, 4]);
     gCtx.moveTo(padLeft, yMean);
     gCtx.lineTo(w, yMean);
@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clip to drawing area
     if (xPos >= padLeft && xPos <= w) {
       gCtx.beginPath();
-      gCtx.strokeStyle = '#ef4444';
+      gCtx.strokeStyle = '#FF8A5C';
       gCtx.lineWidth = 1;
       gCtx.moveTo(xPos, 0);
       gCtx.lineTo(xPos, h - padBottom);
@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ctx.font = 'bold 24px Outfit, sans-serif'; // Larger font
           ctx.fillStyle = color; // Colored text matching line
           ctx.textAlign = 'center';
-          ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
           ctx.shadowBlur = 4;
 
           // Draw below
@@ -735,23 +735,26 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(images => {
         demoGrid.innerHTML = '';
         if (images.length === 0) {
-          demoGrid.innerHTML = '<p class="col-span-full text-center text-slate-500">No demo images found.</p>';
+          demoGrid.innerHTML = '<p class="demo-msg">No demo images found.</p>';
           return;
         }
 
         images.forEach(filename => {
           const div = document.createElement('div');
-          div.className = 'group relative aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer border-2 border-transparent hover:border-indigo-500 transition-all shadow-sm hover:shadow-md';
+          div.className = 'demo-thumb';
+          div.tabIndex = 0;
+          div.setAttribute('role', 'button');
+          div.setAttribute('aria-label', 'Analyze ' + filename);
 
           const img = document.createElement('img');
           img.src = `/static/demo_images/${filename}`;
-          img.className = 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-110';
+          img.alt = '';
 
           const overlay = document.createElement('div');
-          overlay.className = 'absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-end p-3';
+          overlay.className = 'demo-thumb-overlay';
 
           const label = document.createElement('span');
-          label.className = 'text-xs font-medium text-white bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0';
+          label.className = 'demo-thumb-label';
           label.textContent = filename;
 
           overlay.appendChild(label);
@@ -759,12 +762,13 @@ document.addEventListener('DOMContentLoaded', () => {
           div.appendChild(overlay);
 
           div.onclick = () => selectDemoImage(filename);
+          div.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectDemoImage(filename); } };
           demoGrid.appendChild(div);
         });
       })
       .catch(err => {
         console.error(err);
-        demoGrid.innerHTML = '<p class="col-span-full text-center text-red-500">Error loading images.</p>';
+        demoGrid.innerHTML = '<p class="demo-msg">Error loading images.</p>';
       });
   }
 
@@ -776,7 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formData = new FormData();
     formData.append('filename', filename);
 
-    fetch('/', { method: 'POST', body: formData })
+    fetch('/app', { method: 'POST', body: formData })
       .then(res => {
         if (!res.ok) throw new Error("Server Error: " + res.statusText);
         return res.json();
@@ -1033,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Path
         exCtx.beginPath();
-        exCtx.strokeStyle = '#4f46e5';
+        exCtx.strokeStyle = '#0d9488';
         exCtx.lineWidth = 2;
 
         for (let i = 0; i < dists.length; i++) {
@@ -1076,19 +1080,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   toggleCurvesBtn.addEventListener('click', () => {
     showCurves = !showCurves;
-    // Simple toggle switch styling
-    const thumb = toggleCurvesBtn.querySelector('span');
-    if (showCurves) {
-      toggleCurvesBtn.classList.remove('bg-slate-200');
-      toggleCurvesBtn.classList.add('bg-indigo-600');
-      thumb.classList.add('translate-x-5');
-      thumb.classList.remove('translate-x-0');
-    } else {
-      toggleCurvesBtn.classList.remove('bg-indigo-600');
-      toggleCurvesBtn.classList.add('bg-slate-200');
-      thumb.classList.remove('translate-x-5');
-      thumb.classList.add('translate-x-0');
-    }
+    toggleCurvesBtn.classList.toggle('on', showCurves);
+    toggleCurvesBtn.setAttribute('aria-checked', showCurves);
     drawOverlay();
   });
 
@@ -1101,28 +1094,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Tabs Logic ---
   function setActiveTab(tab) {
-    if (tab === 'overview') {
-      contentOverview.classList.remove('hidden');
-      contentProfile.classList.add('hidden');
-
-      tabOverview.classList.add('text-indigo-600', 'border-indigo-600');
-      tabOverview.classList.remove('text-slate-500', 'border-transparent');
-
-      tabProfile.classList.remove('text-indigo-600', 'border-indigo-600');
-      tabProfile.classList.add('text-slate-500', 'border-transparent');
-    } else {
-      contentOverview.classList.add('hidden');
-      contentProfile.classList.remove('hidden');
-
-      tabProfile.classList.add('text-indigo-600', 'border-indigo-600');
-      tabProfile.classList.remove('text-slate-500', 'border-transparent');
-
-      tabOverview.classList.remove('text-indigo-600', 'border-indigo-600');
-      tabOverview.classList.add('text-slate-500', 'border-transparent');
-
-      // Trigger render for profile canvas as it was hidden
-      requestAnimationFrame(updateStats);
-    }
+    const overview = tab === 'overview';
+    contentOverview.classList.toggle('hidden', !overview);
+    contentProfile.classList.toggle('hidden', overview);
+    tabOverview.classList.toggle('active', overview);
+    tabProfile.classList.toggle('active', !overview);
+    tabOverview.setAttribute('aria-selected', overview);
+    tabProfile.setAttribute('aria-selected', !overview);
+    // Profile canvas was hidden while inactive, redraw it
+    if (!overview) requestAnimationFrame(updateStats);
   }
 
   if (tabOverview && tabProfile) {

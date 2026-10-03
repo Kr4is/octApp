@@ -7,8 +7,12 @@ from app.services.orchestrator import analyze_oct_image
 
 bp = Blueprint('main', __name__)
 
-@bp.route('/', methods=['GET', 'POST'])
-def index():
+@bp.route('/')
+def landing():
+    return render_template('landing.html')
+
+@bp.route('/app', methods=['GET', 'POST'])
+def app_view():
     if request.method == 'POST':
         # Demo Analysis Mode
         demo_filename = request.form.get('filename')

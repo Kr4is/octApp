@@ -8,4 +8,5 @@ web/static/uploads/
 web/.temp.jpeg
 __pycache__/
 #Python
-*.pyc
+*.pyc.omc/
+.playwright-mcp/

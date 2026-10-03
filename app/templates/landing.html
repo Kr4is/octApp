@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OCT Vision | Corneal and contact lens analysis</title>
+<meta name="description" content="Measure the clearance between contact lens and cornea on AS-OCT scans.">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0A0D12}
+a{color:inherit;text-decoration:none}
+.nav-link{color:#8B96A5}
+.nav-link:hover{color:#E8ECF1}
+.btn-primary:hover{background:#8AEBDF}
+.btn-ghost:hover{background:rgba(255,255,255,0.06)}
+.card:hover{border-color:rgba(94,224,210,0.35)}
+</style>
+
+<style>html{scroll-behavior:smooth}</style>
+</head>
+<body>
+
+<div style="background:#0A0D12;color:#E8ECF1;font-family:'Geist',system-ui,sans-serif;position:relative;overflow:hidden">
+
+<div style="position:absolute;top:-240px;right:-160px;width:820px;height:820px;border-radius:50%;background:radial-gradient(closest-side,rgba(94,224,210,0.14),rgba(94,224,210,0));pointer-events:none"></div>
+
+<!-- Nav -->
+<header style="position:relative;max-width:1200px;margin:0 auto;padding:28px 32px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px">
+<a href="{{ url_for('main.landing') }}" style="display:flex;align-items:center;gap:12px">
+<img src="{{ url_for('static', filename='logo.svg') }}" alt="" style="width:36px;height:34px;filter:invert(1)">
+<span style="font-size:18px;font-weight:500;letter-spacing:-0.01em">OCT Vision</span>
+</a>
+<nav style="display:flex;flex-wrap:wrap;align-items:center;gap:28px;font-size:15px">
+<a class="nav-link" href="#features">Features</a>
+<a class="nav-link" href="#method">Method</a>
+<a class="nav-link" href="https://github.com/Kr4is/octApp">GitHub</a>
+<a class="btn-primary" href="{{ url_for('main.app_view') }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 20px;border-radius:999px;background:#5EE0D2;color:#06201D;font-weight:500">Open the app</a>
+</nav>
+</header>
+
+<!-- Hero -->
+<section style="position:relative;max-width:1200px;margin:0 auto;padding:72px 32px 96px;display:flex;flex-wrap:wrap;align-items:center;gap:64px">
+<div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:28px">
+<div style="display:inline-flex;align-self:flex-start;align-items:center;gap:10px;padding:8px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:999px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#8B96A5">
+<span style="width:6px;height:6px;border-radius:50%;background:#5EE0D2"></span>
+AS-OCT · Contact lens fitting
+</div>
+<h1 style="margin:0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:clamp(48px,7vw,92px);line-height:0.98;letter-spacing:-0.025em;text-wrap:balance">Measure the gap between <em style="color:#5EE0D2">lens and cornea.</em></h1>
+<p style="margin:0;max-width:520px;font-size:19px;line-height:1.55;color:#8B96A5;text-wrap:pretty">OCT Vision segments anterior-segment OCT scans and measures clearance along the whole lens, so fitting irregular corneas stops being guesswork.</p>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:4px">
+<a class="btn-primary" href="{{ url_for('main.app_view') }}" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 28px;border-radius:999px;background:#5EE0D2;color:#06201D;font-size:16px;font-weight:500">
+Launch the app
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+</a>
+<a class="btn-ghost" href="#features" style="display:inline-flex;align-items:center;min-height:52px;padding:0 24px;border-radius:999px;border:1px solid rgba(255,255,255,0.16);font-size:16px">See how it works</a>
+</div>
+</div>
+
+<div style="flex:1 1 480px;min-width:0;position:relative">
+<div style="border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);background:#000;box-shadow:0 40px 120px -30px rgba(94,224,210,0.25)">
+<img src="{{ url_for('static', filename='demo_images/demo1.jpeg') }}" alt="Anterior segment OCT scan showing the cornea and a contact lens" style="display:block;width:100%;height:auto">
+</div>
+<div style="position:absolute;left:20px;bottom:-24px;right:20px;display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:16px 20px;border-radius:16px;background:rgba(17,22,29,0.88);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1)">
+<span style="font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#8B96A5">Clearance</span>
+<div style="flex:1 1 120px;height:6px;border-radius:3px;background:linear-gradient(90deg,#3B5BFF,#27C4E8,#7DE08A,#FFD24A,#FF4D3D)"></div>
+<span style="font-family:'Geist Mono',monospace;font-size:12px;color:#8B96A5">thin → thick</span>
+</div>
+</div>
+</section>
+
+<!-- Features -->
+<section id="features" style="position:relative;max-width:1200px;margin:0 auto;padding:96px 32px 32px">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:640px;margin-bottom:56px">
+<span style="font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#5EE0D2">What it does</span>
+<h2 style="margin:0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:clamp(36px,4.5vw,56px);line-height:1.05;letter-spacing:-0.02em;text-wrap:balance">From raw scan to a clearance profile, in one pass.</h2>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:20px">
+
+<div class="card" style="grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:0;border-radius:24px;border:1px solid rgba(255,255,255,0.08);background:#11161D;overflow:hidden">
+<div style="flex:1 1 380px;padding:40px;display:flex;flex-direction:column;justify-content:center;gap:16px">
+<h3 style="margin:0;font-size:28px;font-weight:500;letter-spacing:-0.015em">Automated segmentation</h3>
+<p style="margin:0;font-size:17px;line-height:1.6;color:#8B96A5;text-wrap:pretty">Corneal and lens surfaces are detected with CLAHE enhancement, Canny edges and morphological grouping, then smoothed with least-squares polynomial fits.</p>
+</div>
+<div style="flex:1 1 380px;min-height:260px;background:#000"><img src="{{ url_for('static', filename='demo_images/demo3.jpeg') }}" alt="OCT scan used for automated segmentation" style="display:block;width:100%;height:100%;object-fit:cover"></div>
+</div>
+
+<div class="card" style="padding:32px;border-radius:24px;border:1px solid rgba(255,255,255,0.08);background:#11161D;display:flex;flex-direction:column;gap:14px">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5EE0D2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>
+<h3 style="margin:0;font-size:21px;font-weight:500">Two ways to measure</h3>
+<p style="margin:0;font-size:16px;line-height:1.6;color:#8B96A5;text-wrap:pretty">Vertical sagittal gap for fitting, or minimum Euclidean distance for safety. Switch with one click.</p>
+</div>
+
+<div class="card" style="padding:32px;border-radius:24px;border:1px solid rgba(255,255,255,0.08);background:#11161D;display:flex;flex-direction:column;gap:14px">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5EE0D2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+<h3 style="margin:0;font-size:21px;font-weight:500">Zonal and shape metrics</h3>
+<p style="margin:0;font-size:16px;line-height:1.6;color:#8B96A5;text-wrap:pretty">Central versus peripheral clearance, symmetry index and estimated anterior curvature, calculated for you.</p>
+</div>
+
+<div class="card" style="padding:32px;border-radius:24px;border:1px solid rgba(255,255,255,0.08);background:#11161D;display:flex;flex-direction:column;gap:14px">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5EE0D2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-6 4 3 5-8 4 5"/><path d="M3 21h18"/></svg>
+<h3 style="margin:0;font-size:21px;font-weight:500">Interactive thickness profile</h3>
+<p style="margin:0;font-size:16px;line-height:1.6;color:#8B96A5;text-wrap:pretty">Slide across the scan and read clearance at any position. Export an annotated report as an image.</p>
+</div>
+
+</div>
+</section>
+
+<!-- Method -->
+<section id="method" style="position:relative;max-width:1200px;margin:0 auto;padding:96px 32px">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:640px;margin-bottom:56px">
+<span style="font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#5EE0D2">Method</span>
+<h2 style="margin:0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:clamp(36px,4.5vw,56px);line-height:1.05;letter-spacing:-0.02em;text-wrap:balance">Four stages, all open source.</h2>
+</div>
+<ol style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:0;border-top:1px solid rgba(255,255,255,0.12)">
+<li style="padding:28px 24px 28px 0;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:13px;color:#5EE0D2">01</span><h3 style="margin:0;font-size:20px;font-weight:500">Preprocessing</h3><p style="margin:0;font-size:15px;line-height:1.6;color:#8B96A5">Contrast enhancement with CLAHE and noise reduction.</p></li>
+<li style="padding:28px 24px 28px 0;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:13px;color:#5EE0D2">02</span><h3 style="margin:0;font-size:20px;font-weight:500">Segmentation</h3><p style="margin:0;font-size:15px;line-height:1.6;color:#8B96A5">Canny edge detection and morphological grouping.</p></li>
+<li style="padding:28px 24px 28px 0;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:13px;color:#5EE0D2">03</span><h3 style="margin:0;font-size:20px;font-weight:500">Surface fitting</h3><p style="margin:0;font-size:15px;line-height:1.6;color:#8B96A5">Polynomial models of the corneal and lens curves.</p></li>
+<li style="padding:28px 0;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:13px;color:#5EE0D2">04</span><h3 style="margin:0;font-size:20px;font-weight:500">Computation</h3><p style="margin:0;font-size:15px;line-height:1.6;color:#8B96A5">Vertical and minimum Euclidean distances along the lens.</p></li>
+</ol>
+</section>
+
+<!-- CTA -->
+<section style="position:relative;max-width:1200px;margin:0 auto;padding:0 32px 96px">
+<div style="padding:72px 40px;border-radius:32px;border:1px solid rgba(94,224,210,0.25);background:radial-gradient(120% 140% at 50% 0%,rgba(94,224,210,0.16),rgba(94,224,210,0) 60%),#11161D;display:flex;flex-direction:column;align-items:center;text-align:center;gap:28px">
+<h2 style="margin:0;max-width:720px;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:clamp(36px,5vw,64px);line-height:1.04;letter-spacing:-0.02em;text-wrap:balance">Try it on a real case, no setup needed.</h2>
+<p style="margin:0;max-width:480px;font-size:17px;line-height:1.55;color:#8B96A5">The app ships with a library of clinical demo scans. Pick one and start measuring.</p>
+<a class="btn-primary" href="{{ url_for('main.app_view') }}" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 28px;border-radius:999px;background:#5EE0D2;color:#06201D;font-size:16px;font-weight:500">
+Launch the app
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+</a>
+</div>
+</section>
+
+<!-- Footer -->
+<footer style="position:relative;max-width:1200px;margin:0 auto;padding:32px;border-top:1px solid rgba(255,255,255,0.08);display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;font-size:14px;color:#8B96A5">
+<span>Engineering project · Universidade da Coruña · GPL v3</span>
+<span>Research and education tool, not a certified medical device.</span>
+</footer>
+
+</div>
+
+</body>
+</html>
