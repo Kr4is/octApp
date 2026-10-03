@@ -1,9 +1,8 @@
 name: CI
 
 on:
-  push:
-    branches: [master]
   pull_request:
+  workflow_call:  # reused by docker-publish so the image only ships if CI passes
 
 jobs:
   test:
